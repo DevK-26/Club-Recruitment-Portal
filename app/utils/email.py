@@ -1,28 +1,23 @@
-"""Email sending utilities"""
-from flask import current_app, render_template
-from flask_mail import Message
-from app import mail
+"""Email sending utilities - Using Resend for reliable email delivery"""
+from flask import current_app
 import logging
-import socket
+import resend
 
 logger = logging.getLogger(__name__)
 
-# Set a short timeout for email operations
-EMAIL_TIMEOUT = 10  # seconds
-
 
 def is_email_configured():
-    """Check if email is properly configured"""
-    username = current_app.config.get('MAIL_USERNAME')
-    password = current_app.config.get('MAIL_PASSWORD')
-    return bool(username and password and username.strip() and password.strip())
+    """Check if Resend is properly configured"""
+    api_key = current_app.config.get('RESEND_API_KEY')
+    from_email = current_app.config.get('RESEND_FROM_EMAIL')
+    return bool(api_key and from_email and api_key.strip() and from_email.strip())
 
 
 def send_email(to_email, subject, html_content, text_content=None):
-    """Send email using Flask-Mail
+    """Send email using Resend API
     
     Args:
-        to_email (str): Recipient email address
+        to_email (str): Recipient email address (or list of emails)
         subject (str): Email subject
         html_content (str): HTML email body
         text_content (str): Plain text email body (optional)
@@ -32,36 +27,71 @@ def send_email(to_email, subject, html_content, text_content=None):
     """
     # Check if email is configured
     if not is_email_configured():
-        logger.warning(f"Email not configured. Skipping email to {to_email}")
+        logger.warning(f"Resend not configured. Skipping email to {to_email}")
         return True  # Don't block workflow
-    
-    # Set socket timeout for SMTP operations
-    original_timeout = socket.getdefaulttimeout()
-    socket.setdefaulttimeout(EMAIL_TIMEOUT)
     
     try:
-        msg = Message(
-            subject=subject,
-            recipients=[to_email],
-            html=html_content,
-            body=text_content or html_content,
-            sender=current_app.config['MAIL_DEFAULT_SENDER']
-        )
+        # Set API key
+        resend.api_key = current_app.config['RESEND_API_KEY']
         
-        mail.send(msg)
-        logger.info(f"Email sent successfully to {to_email}")
+        # Handle single email or list
+        recipients = [to_email] if isinstance(to_email, str) else to_email
+        
+        # Send email via Resend
+        params = {
+            "from": current_app.config['RESEND_FROM_EMAIL'],
+            "to": recipients,
+            "subject": subject,
+            "html": html_content,
+        }
+        
+        if text_content:
+            params["text"] = text_content
+        
+        response = resend.Emails.send(params)
+        logger.info(f"Email sent successfully to {to_email}, ID: {response.get('id', 'unknown')}")
         return True
-    
-    except socket.timeout:
-        logger.warning(f"Email timeout for {to_email} - SMTP server not reachable")
-        return True  # Don't block workflow
     
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        return True  # Don't block workflow
+        return True  # Don't block workflow - email failure shouldn't stop operations
+
+
+def send_batch_emails(emails_data):
+    """Send multiple emails in a single batch (up to 100)
     
-    finally:
-        socket.setdefaulttimeout(original_timeout)
+    Args:
+        emails_data: List of dicts with 'to', 'subject', 'html', 'text' keys
+    
+    Returns:
+        bool: True if batch sent successfully
+    """
+    if not is_email_configured():
+        logger.warning("Resend not configured. Skipping batch emails.")
+        return True
+    
+    try:
+        resend.api_key = current_app.config['RESEND_API_KEY']
+        from_email = current_app.config['RESEND_FROM_EMAIL']
+        
+        # Prepare batch
+        batch = []
+        for email in emails_data:
+            batch.append({
+                "from": from_email,
+                "to": [email['to']] if isinstance(email['to'], str) else email['to'],
+                "subject": email['subject'],
+                "html": email['html'],
+            })
+        
+        # Send batch (Resend supports up to 100 emails per batch)
+        response = resend.Batch.send(batch)
+        logger.info(f"Batch of {len(batch)} emails sent successfully")
+        return True
+    
+    except Exception as e:
+        logger.error(f"Failed to send batch emails: {str(e)}")
+        return True
 
 
 def send_credentials_email(user, temp_password):
