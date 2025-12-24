@@ -3,8 +3,12 @@ from flask import current_app, render_template
 from flask_mail import Message
 from app import mail
 import logging
+import socket
 
 logger = logging.getLogger(__name__)
+
+# Set a short timeout for email operations
+EMAIL_TIMEOUT = 10  # seconds
 
 
 def is_email_configured():
@@ -24,14 +28,16 @@ def send_email(to_email, subject, html_content, text_content=None):
         text_content (str): Plain text email body (optional)
     
     Returns:
-        bool: True if email sent successfully, False otherwise
+        bool: True if email sent successfully or skipped, False only on critical error
     """
     # Check if email is configured
     if not is_email_configured():
         logger.warning(f"Email not configured. Skipping email to {to_email}")
-        logger.info(f"Subject: {subject}")
-        # Return True to not block the workflow - email is optional
-        return True
+        return True  # Don't block workflow
+    
+    # Set socket timeout for SMTP operations
+    original_timeout = socket.getdefaulttimeout()
+    socket.setdefaulttimeout(EMAIL_TIMEOUT)
     
     try:
         msg = Message(
@@ -46,10 +52,16 @@ def send_email(to_email, subject, html_content, text_content=None):
         logger.info(f"Email sent successfully to {to_email}")
         return True
     
+    except socket.timeout:
+        logger.warning(f"Email timeout for {to_email} - SMTP server not reachable")
+        return True  # Don't block workflow
+    
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        # Return True to not block the workflow
-        return True
+        return True  # Don't block workflow
+    
+    finally:
+        socket.setdefaulttimeout(original_timeout)
 
 
 def send_credentials_email(user, temp_password):
