@@ -33,11 +33,13 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # SendGrid Email Configuration (Uses HTTPS - works on Render!)
-    # Sign up free: https://sendgrid.com (100 emails/day)
-    # Get API key: Settings → API Keys → Create API Key
-    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')  # Starts with SG.
-    SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL')  # Your email
+    # Mailgun Email Configuration (HTTP API - works on Render!)
+    # Sign up free: https://www.mailgun.com (5000 emails/month)
+    # Use sandbox domain for testing (add authorized recipients)
+    # Or verify your own domain for unlimited recipients
+    MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
+    MAILGUN_DOMAIN = os.environ.get('MAILGUN_DOMAIN')  # e.g., sandbox123.mailgun.org
+    MAILGUN_FROM_EMAIL = os.environ.get('MAILGUN_FROM_EMAIL')  # Optional, defaults to noreply@domain
     
     # Legacy mail config (not used but kept for compatibility)
     MAIL_SERVER = 'smtp.gmail.com'

@@ -1,64 +1,76 @@
-"""Email sending utilities - Using SendGrid HTTP API
+"""Email sending utilities - Using Mailgun HTTP API
 
-SendGrid works on Render because it uses HTTPS (not blocked SMTP ports).
+Mailgun works perfectly on Render (HTTPS API, no SMTP blocking).
 
-Setup (2 minutes):
-1. Sign up free at https://sendgrid.com (100 emails/day free)
-2. Go to Settings → API Keys
-3. Click "Create API Key" → Full Access
-4. Copy the API key (starts with SG.)
-5. Set environment variable: SENDGRID_API_KEY=SG.your-key-here
-6. Set environment variable: SENDGRID_FROM_EMAIL=your-email@gmail.com
+Setup (1 minute):
+1. Sign up free at https://www.mailgun.com (5000 emails/month free)
+2. Go to Sending → Domain Settings → Click "sandbox..." domain
+3. Copy the API Key and domain name
+4. Add authorized recipients (for sandbox mode): Settings → Authorized Recipients
+5. Set environment variables:
+   - MAILGUN_API_KEY=your-api-key-here
+   - MAILGUN_DOMAIN=sandboxXXXXXX.mailgun.org
 
-That's it! No domain verification needed for 100 emails/day.
+That's it! Works immediately on Render.
 """
 from flask import current_app
 import logging
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content
+import requests
 
 logger = logging.getLogger(__name__)
 
 
 def is_email_configured():
-    """Check if SendGrid is properly configured"""
-    api_key = current_app.config.get('SENDGRID_API_KEY')
-    from_email = current_app.config.get('SENDGRID_FROM_EMAIL')
-    return bool(api_key and from_email)
+    """Check if Mailgun is properly configured"""
+    api_key = current_app.config.get('MAILGUN_API_KEY')
+    domain = current_app.config.get('MAILGUN_DOMAIN')
+    return bool(api_key and domain)
 
 
 def send_email(to_email, subject, html_content, text_content=None):
-    """Send email using SendGrid HTTP API
+    """Send email using Mailgun HTTP API
     
     Returns:
         bool: True always (never blocks workflow)
     """
     if not is_email_configured():
-        logger.warning(f"SendGrid not configured. Skipping email to {to_email}")
+        logger.warning(f"Mailgun not configured. Skipping email to {to_email}")
         return True
     
     try:
-        api_key = current_app.config['SENDGRID_API_KEY']
-        from_email = current_app.config['SENDGRID_FROM_EMAIL']
+        api_key = current_app.config['MAILGUN_API_KEY']
+        domain = current_app.config['MAILGUN_DOMAIN']
+        from_email = current_app.config.get('MAILGUN_FROM_EMAIL', f'noreply@{domain}')
+        from_name = current_app.config.get('CLUB_NAME', 'Tech Club')
         
-        # Create message
-        message = Mail(
-            from_email=Email(from_email),
-            to_emails=To(to_email),
-            subject=subject,
-            html_content=Content("text/html", html_content)
+        # Mailgun API endpoint
+        url = f"https://api.mailgun.net/v3/{domain}/messages"
+        
+        # Prepare data
+        data = {
+            'from': f'{from_name} <{from_email}>',
+            'to': to_email,
+            'subject': subject,
+            'html': html_content
+        }
+        
+        if text_content:
+            data['text'] = text_content
+        
+        # Send request
+        response = requests.post(
+            url,
+            auth=('api', api_key),
+            data=data,
+            timeout=10
         )
         
-        # Add plain text if provided
-        if text_content:
-            message.add_content(Content("text/plain", text_content))
-        
-        # Send via SendGrid API
-        sg = SendGridAPIClient(api_key)
-        response = sg.send(message)
-        
-        logger.info(f"Email sent to {to_email} (status: {response.status_code})")
-        return True
+        if response.status_code == 200:
+            logger.info(f"Email sent to {to_email}")
+            return True
+        else:
+            logger.warning(f"Mailgun returned {response.status_code}: {response.text}")
+            return True  # Don't block workflow
         
     except Exception as e:
         logger.warning(f"Email failed to {to_email}: {str(e)}")
