@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Results - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-check-circle text-success"></i> Candidates Added Successfully</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.upload_candidates') }}">Upload</a></li>
+            <li class="breadcrumb-item active">Results</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+        <strong>Important: Save These Credentials!</strong>
+        <p class="mb-0">Below are the login credentials for the newly added candidates. Please save them securely as they won't be shown again. Email delivery may have failed if email is not configured.</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-key"></i> Login Credentials</h5>
+        <button onclick="copyAllCredentials()" class="btn btn-sm btn-primary">
+            <i class="bi bi-clipboard"></i> Copy All
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="credentialsTable">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Password</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cred in credentials %}
+                    <tr>
+                        <td><strong>{{ cred.name }}</strong></td>
+                        <td>{{ cred.email }}</td>
+                        <td>
+                            <code class="text-danger fw-bold">{{ cred.password }}</code>
+                        </td>
+                        <td>
+                            <button onclick="copyCredential('{{ cred.email }}', '{{ cred.password }}')" 
+                                    class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{{ url_for('admin.candidates') }}" class="btn btn-success">
+        <i class="bi bi-people"></i> View Candidates
+    </a>
+    <a href="{{ url_for('admin.upload_candidates') }}" class="btn btn-light">
+        <i class="bi bi-upload"></i> Upload More
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyCredential(email, password) {
+    const text = `Email: ${email}\nPassword: ${password}`;
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const btn = event.target.closest('button');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> Copied!';
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-primary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy credentials');
+    });
+}
+
+function copyAllCredentials() {
+    let text = 'Login Credentials for All Candidates:\n\n';
+    
+    {% for cred in credentials %}
+    text += 'Name: {{ cred.name }}\n';
+    text += 'Email: {{ cred.email }}\n';
+    text += 'Password: {{ cred.password }}\n\n';
+    {% endfor %}
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show success feedback
+        const btn = event.target;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check-lg"></i> All Copied!';
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-primary');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy all credentials');
+    });
+}
+
+// Warn before leaving page
+window.addEventListener('beforeunload', function (e) {
+    e.preventDefault();
+    e.returnValue = 'Are you sure you want to leave? Make sure you have saved the credentials.';
+});
+</script>
+{% endblock %}

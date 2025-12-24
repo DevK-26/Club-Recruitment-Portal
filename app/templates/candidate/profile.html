@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-person"></i> My Profile</h1>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- Personal Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Personal Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('candidate.update_profile') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ user.name }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" 
+                               value="{{ user.email }}" disabled>
+                        <div class="form-text">Email cannot be changed</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" class="form-control" id="phone" name="phone" 
+                               value="{{ user.phone or '' }}">
+                    </div>
+                    
+                    {% if application %}
+                    <div class="mb-3">
+                        <label for="department" class="form-label">Department</label>
+                        <input type="text" class="form-control" value="{{ application.department }}" disabled>
+                        <div class="form-text">Department cannot be changed</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="year" class="form-label">Year</label>
+                        <input type="text" class="form-control" value="{{ application.year }}" disabled>
+                        <div class="form-text">Year cannot be changed</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Skills</label>
+                        <textarea class="form-control" id="skills" name="skills" rows="3" 
+                                  placeholder="Enter your skills (comma-separated)">{{ application.skills or '' }}</textarea>
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Update Profile
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <!-- Account Information -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Account Status:</strong> 
+                    {% if user.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-danger">Inactive</span>
+                    {% endif %}
+                </p>
+                <p class="mb-2"><strong>Member Since:</strong><br>{{ user.created_at.strftime('%B %d, %Y') }}</p>
+                
+                <hr>
+                
+                <a href="{{ url_for('auth.change_password') }}" class="btn btn-warning w-100">
+                    <i class="bi bi-key"></i> Change Password
+                </a>
+            </div>
+        </div>
+
+        <!-- Application Status -->
+        {% if application %}
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0">Application Status</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    {% if application.status == 'pending' %}
+                    <span class="badge bg-warning fs-6">Pending</span>
+                    {% elif application.status == 'slot_selected' %}
+                    <span class="badge bg-info fs-6">Slot Selected</span>
+                    {% elif application.status == 'interviewed' %}
+                    <span class="badge bg-primary fs-6">Interviewed</span>
+                    {% elif application.status == 'selected' %}
+                    <span class="badge bg-success fs-6">Selected</span>
+                    {% endif %}
+                </p>
+                <small class="text-muted">Last updated: {{ application.updated_at.strftime('%B %d, %Y') }}</small>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

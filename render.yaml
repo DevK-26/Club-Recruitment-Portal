@@ -1,0 +1,40 @@
+services:
+  # Web Service
+  - type: web
+    name: hiring-system
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn run:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false  # Set manually from Neon connection string
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      # Email settings - configure in Render dashboard
+      - key: MAIL_SERVER
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: 587
+      - key: MAIL_USE_TLS
+        value: True
+      # Add these manually in Render dashboard:
+      # MAIL_USERNAME - your Gmail address
+      # MAIL_PASSWORD - your Gmail app password
+      # BASE_URL - your Render app URL (e.g., https://your-app.onrender.com)
+      - key: CLUB_NAME
+        value: Tech Club
+      - key: SUPPORT_EMAIL
+        value: support@techclub.com
+      - key: SESSION_TIMEOUT
+        value: 3600
+      - key: MAX_FAILED_ATTEMPTS
+        value: 5
+      - key: LOCKOUT_DURATION
+        value: 900
+
+# Note: Database is hosted on Neon.tech (free forever)
+# Create database at https://neon.tech and add connection string to DATABASE_URL above

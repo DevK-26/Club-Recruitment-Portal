@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Available Slots - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar3"></i> Available Interview Slots</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('candidate.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Available Slots</li>
+        </ol>
+    </nav>
+</div>
+
+{% if existing_booking %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle"></i>
+    <strong>Note:</strong> You have already booked a slot. Cancel it from your dashboard if you want to select a different time.
+</div>
+{% endif %}
+
+<!-- Date Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="date" class="form-label"><i class="bi bi-funnel"></i> Filter by Date</label>
+                <input type="date" class="form-control" id="date" name="date" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('candidate.view_slots') }}" class="btn btn-light w-100">
+                    <i class="bi bi-x-lg"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Slots by Date -->
+{% if slots_by_date %}
+    {% for date, slots in slots_by_date.items() %}
+    <div class="card mb-4 slide-in">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="bi bi-calendar-event"></i> {{ date.strftime('%A, %B %d, %Y') }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for slot in slots %}
+                <div class="col-md-4 mb-3" data-slot-id="{{ slot.id }}">
+                    <div class="slot-card {% if not slot.is_available %}full{% endif %}">
+                        <div class="slot-date">
+                            <i class="bi bi-clock-fill"></i> 
+                            {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                        </div>
+                        <div class="slot-spots">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-muted">Capacity: {{ slot.capacity }}</small><br>
+                                    {% if slot.is_available %}
+                                    <span class="badge bg-success">{{ slot.available_spots }} spots available</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Fully Booked</span>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if slot.is_available and not existing_booking %}
+                                <form method="POST" action="{{ url_for('candidate.book_slot', slot_id=slot.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-primary"
+                                            onclick="return confirm('Confirm booking for {{ date.strftime('%b %d') }} at {{ slot.start_time.strftime('%I:%M %p') }}?');">
+                                        <i class="bi bi-check-circle"></i> Book
+                                    </button>
+                                </form>
+                                {% elif not slot.is_available %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="bi bi-x-circle"></i> Full
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+<div class="card">
+    <div class="card-body">
+        <div class="empty-state">
+            <i class="bi bi-calendar-x"></i>
+            <h5>No Available Slots</h5>
+            <p>No available interview slots found. Please check back later or contact support.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{{ url_for('candidate.dashboard') }}" class="btn btn-light">
+        <i class="bi bi-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-refresh slot availability every 30 seconds
+setInterval(function() {
+    fetch('/api/slots')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Update slot availability indicators
+                data.slots.forEach(slot => {
+                    const slotElement = document.querySelector(`[data-slot-id="${slot.id}"]`);
+                    if (slotElement) {
+                        const slotCard = slotElement.querySelector('.slot-card');
+                        const badge = slotElement.querySelector('.badge');
+                        const button = slotElement.querySelector('button');
+                        
+                        if (slot.is_available) {
+                            slotCard.classList.remove('full');
+                            badge.className = 'badge bg-success';
+                            badge.textContent = `${slot.available_spots} spots available`;
+                            if (button && !button.type === 'submit') {
+                                button.disabled = false;
+                                button.className = 'btn btn-primary';
+                                button.innerHTML = '<i class="bi bi-check-circle"></i> Book';
+                            }
+                        } else {
+                            slotCard.classList.add('full');
+                            badge.className = 'badge bg-secondary';
+                            badge.textContent = 'Fully Booked';
+                            if (button) {
+                                button.disabled = true;
+                                button.className = 'btn btn-secondary';
+                                button.innerHTML = '<i class="bi bi-x-circle"></i> Full';
+                            }
+                        }
+                    }
+                });
+            }
+        })
+        .catch(error => console.error('Error refreshing slots:', error));
+}, 30000);
+</script>
+{% endblock %}

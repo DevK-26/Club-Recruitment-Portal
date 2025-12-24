@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Slots - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-calendar-check"></i> Manage Interview Slots</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item active">Interview Slots</li>
+        </ol>
+    </nav>
+</div>
+
+<!-- Create New Slot -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create New Slot</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ url_for('admin.create_slot') }}" class="row g-3 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="col-md-3">
+                <label for="date" class="form-label">Date</label>
+                <input type="date" class="form-control" id="date" name="date" required min="{{ today }}">
+            </div>
+            <div class="col-md-2">
+                <label for="start_time" class="form-label">Start Time</label>
+                <input type="time" class="form-control" id="start_time" name="start_time" required>
+            </div>
+            <div class="col-md-2">
+                <label for="end_time" class="form-label">End Time</label>
+                <input type="time" class="form-control" id="end_time" name="end_time" required>
+            </div>
+            <div class="col-md-2">
+                <label for="capacity" class="form-label">Capacity</label>
+                <input type="number" class="form-control" id="capacity" name="capacity" 
+                       min="1" value="5" required>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-success">
+                    <i class="bi bi-plus-lg"></i> Create Slot
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Filter -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="date_filter" class="form-label"><i class="bi bi-funnel"></i> Filter by Date</label>
+                <input type="date" class="form-control" id="date_filter" name="date" value="{{ date_filter }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.manage_slots') }}" class="btn btn-light w-100">
+                    <i class="bi bi-x-lg"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Slots List -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Available Slots</h5>
+        <span class="badge bg-secondary">{{ slots|length if slots else 0 }} slots</span>
+    </div>
+    <div class="card-body p-0">
+        {% if slots %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Capacity</th>
+                        <th>Bookings</th>
+                        <th>Candidates</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for slot in slots %}
+                    <tr class="fade-in">
+                        <td>
+                            <strong>{{ slot.date.strftime('%A, %b %d, %Y') }}</strong>
+                        </td>
+                        <td>
+                            <i class="bi bi-clock text-muted"></i>
+                            {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                        </td>
+                        <td>{{ slot.capacity }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="width: 60px; height: 8px;">
+                                    <div class="progress-bar {% if slot.is_full %}bg-danger{% else %}bg-success{% endif %}" 
+                                         style="width: {{ (slot.current_bookings / slot.capacity * 100)|int }}%"></div>
+                                </div>
+                                <span class="badge {% if slot.is_full %}bg-danger{% else %}bg-success{% endif %}">
+                                    {{ slot.current_bookings }}/{{ slot.capacity }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if slot.bookings %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for booking in slot.bookings[:3] %}
+                                    <a href="{{ url_for('admin.view_candidate', user_id=booking.user.id) }}" 
+                                       class="badge bg-light text-dark text-decoration-none" 
+                                       title="{{ booking.user.email }}">
+                                        {{ booking.user.name }}
+                                    </a>
+                                    {% endfor %}
+                                    {% if slot.bookings|length > 3 %}
+                                    <a href="{{ url_for('admin.view_slot_bookings', slot_id=slot.id) }}" 
+                                       class="badge bg-primary text-decoration-none">
+                                        +{{ slot.bookings|length - 3 }} more
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span class="text-muted">No bookings</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if slot.is_open %}
+                            <span class="status-badge selected">Open</span>
+                            {% else %}
+                            <span class="badge bg-secondary">Closed</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('admin.view_slot_bookings', slot_id=slot.id) }}" 
+                                   class="btn btn-sm btn-info" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.toggle_slot', slot_id=slot.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm {% if slot.is_open %}btn-warning{% else %}btn-success{% endif %}" 
+                                            title="{% if slot.is_open %}Close Slot{% else %}Open Slot{% endif %}">
+                                        <i class="bi {% if slot.is_open %}bi-toggle-on{% else %}bi-toggle-off{% endif %}"></i>
+                                    </button>
+                                </form>
+                                {% if slot.current_bookings == 0 %}
+                                <form method="POST" action="{{ url_for('admin.delete_slot', slot_id=slot.id) }}"
+                                      onsubmit="return confirm('Are you sure you want to delete this slot?');" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete Slot">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-5">
+            <i class="bi bi-calendar-x"></i>
+            <h5>No Slots Created</h5>
+            <p>Create your first interview slot using the form above.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

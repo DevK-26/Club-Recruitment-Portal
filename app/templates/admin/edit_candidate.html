@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Candidate - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <div class="page-header">
+            <h1><i class="bi bi-pencil-square"></i> Edit Candidate</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.candidates') }}">Candidates</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.view_candidate', user_id=candidate.id) }}">{{ candidate.name }}</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-person-badge"></i> Candidate Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.edit_candidate', user_id=candidate.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <h6 class="border-bottom pb-2 mb-3">Basic Information</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">Full Name *</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ candidate.name }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email *</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ candidate.email }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" 
+                               value="{{ candidate.phone or '' }}">
+                    </div>
+
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Reset Password</h6>
+                    
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Leave blank to keep current password. If you set a new password, the candidate will be required to change it on next login.
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">New Password (Optional)</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="Leave blank to keep current password">
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePassword()">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted">Minimum 6 characters</small>
+                    </div>
+
+                    {% if candidate.application %}
+                    <h6 class="border-bottom pb-2 mb-3 mt-4">Application Details</h6>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="department" class="form-label">Department *</label>
+                            <select class="form-select" id="department" name="department" required>
+                                <option value="">Select Department</option>
+                                <option value="Technical" {% if candidate.application.department == 'Technical' %}selected{% endif %}>Technical</option>
+                                <option value="Management" {% if candidate.application.department == 'Management' %}selected{% endif %}>Management</option>
+                                <option value="Design" {% if candidate.application.department == 'Design' %}selected{% endif %}>Design</option>
+                                <option value="Marketing" {% if candidate.application.department == 'Marketing' %}selected{% endif %}>Marketing</option>
+                                <option value="Content" {% if candidate.application.department == 'Content' %}selected{% endif %}>Content</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="year" class="form-label">Year *</label>
+                            <select class="form-select" id="year" name="year" required>
+                                <option value="">Select Year</option>
+                                <option value="1st" {% if candidate.application.year == '1st' %}selected{% endif %}>1st Year</option>
+                                <option value="2nd" {% if candidate.application.year == '2nd' %}selected{% endif %}>2nd Year</option>
+                                <option value="3rd" {% if candidate.application.year == '3rd' %}selected{% endif %}>3rd Year</option>
+                                <option value="4th" {% if candidate.application.year == '4th' %}selected{% endif %}>4th Year</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="skills" class="form-label">Skills</label>
+                        <textarea class="form-control" id="skills" name="skills" rows="3" 
+                                  placeholder="Enter skills separated by commas">{{ candidate.application.skills or '' }}</textarea>
+                        <small class="text-muted">Separate multiple skills with commas</small>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-lg"></i> Save Changes
+                        </button>
+                        <a href="{{ url_for('admin.view_candidate', user_id=candidate.id) }}" class="btn btn-light">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('toggleIcon');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        toggleIcon.className = 'bi bi-eye-slash';
+    } else {
+        passwordInput.type = 'password';
+        toggleIcon.className = 'bi bi-eye';
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const password = document.getElementById('password').value;
+    
+    if (password && password.length < 6) {
+        e.preventDefault();
+        alert('Password must be at least 6 characters long');
+    }
+});
+</script>
+{% endblock %}

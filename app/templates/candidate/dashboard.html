@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Candidate Dashboard - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="welcome-banner">
+    <h2><i class="bi bi-person-circle"></i> Welcome, {{ current_user.name }}!</h2>
+    <p>Your recruitment dashboard - track your application status and interview schedule</p>
+</div>
+
+<!-- Application Status -->
+<div class="row mb-4">
+    <div class="col-lg-8 mb-3">
+        {% if booking %}
+        <!-- Interview Confirmed Card -->
+        <div class="interview-confirmed-card">
+            <div class="icon">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <h4><i class="bi bi-check-circle-fill"></i> Interview Scheduled</h4>
+            <div class="detail-item">
+                <i class="bi bi-calendar3"></i>
+                <span>{{ booking.slot.date.strftime('%A, %B %d, %Y') }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="bi bi-clock"></i>
+                <span>{{ booking.slot.start_time.strftime('%I:%M %p') }} - {{ booking.slot.end_time.strftime('%I:%M %p') }}</span>
+            </div>
+            <div class="detail-item">
+                <i class="bi bi-bookmark-check"></i>
+                <span>Booked on: {{ booking.booked_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+            </div>
+            
+            <div class="mt-4">
+                <form method="POST" action="{{ url_for('candidate.cancel_slot') }}" class="d-inline"
+                      onsubmit="return confirm('Are you sure you want to cancel your booking?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-light">
+                        <i class="bi bi-x-circle"></i> Cancel Booking
+                    </button>
+                </form>
+            </div>
+            
+            <small class="d-block mt-3" style="opacity: 0.8;">
+                <i class="bi bi-info-circle"></i> Cancellation is not allowed within 24 hours of the interview.
+            </small>
+        </div>
+        {% else %}
+        <!-- No Booking Card -->
+        <div class="card h-100">
+            <div class="card-body d-flex flex-column justify-content-center align-items-center py-5">
+                <div style="font-size: 4rem; color: #94a3b8; margin-bottom: 1rem;">
+                    <i class="bi bi-calendar-plus"></i>
+                </div>
+                <h4 class="text-center mb-3">Book Your Interview Slot</h4>
+                <p class="text-muted text-center mb-4" style="max-width: 400px;">
+                    You haven't booked an interview slot yet. Browse available slots and select your preferred time.
+                </p>
+                <a href="{{ url_for('candidate.view_slots') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-calendar-check"></i> View Available Slots
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4 mb-3">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-person"></i> Application Info</h5>
+            </div>
+            <div class="card-body">
+                {% if application %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Department</small>
+                    <strong>{{ application.department }}</strong>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Year</small>
+                    <strong>{{ application.year }}</strong>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted d-block">Status</small>
+                    {% if application.status == 'pending' %}
+                    <span class="status-badge pending">Pending Review</span>
+                    {% elif application.status == 'slot_selected' %}
+                    <span class="status-badge slot-selected">Slot Selected</span>
+                    {% elif application.status == 'interviewed' %}
+                    <span class="status-badge interviewed">Interviewed</span>
+                    {% elif application.status == 'selected' %}
+                    <span class="status-badge selected">Selected</span>
+                    {% elif application.status == 'rejected' %}
+                    <span class="status-badge rejected">Not Selected</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="bi bi-file-earmark-x"></i>
+                    <p>No application details available.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Announcements -->
+{% if announcements %}
+<div class="mb-4">
+    <h5 class="mb-3"><i class="bi bi-megaphone-fill" style="color: #f59e0b;"></i> Important Announcements</h5>
+    {% for announcement in announcements %}
+    <div class="announcement-card fade-in">
+        <h6>{{ announcement.title }}</h6>
+        <p>{{ announcement.content }}</p>
+        <small><i class="bi bi-clock"></i> {{ announcement.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<!-- Available Slots Preview -->
+{% if not booking and available_slots %}
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-calendar3"></i> Available Interview Slots</h5>
+        <a href="{{ url_for('candidate.view_slots') }}" class="btn btn-sm btn-outline-primary">
+            View All <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            {% for slot in available_slots[:6] %}
+            <div class="col-md-4 mb-3">
+                <div class="slot-card">
+                    <div class="slot-date">
+                        <i class="bi bi-calendar-event"></i> {{ slot.date.strftime('%b %d, %Y') }}
+                    </div>
+                    <div class="slot-time">
+                        <i class="bi bi-clock"></i>
+                        {{ slot.start_time.strftime('%I:%M %p') }} - {{ slot.end_time.strftime('%I:%M %p') }}
+                    </div>
+                    <div class="slot-spots d-flex justify-content-between align-items-center">
+                        <span class="badge bg-success">{{ slot.available_spots }} spots left</span>
+                        <form method="POST" action="{{ url_for('candidate.book_slot', slot_id=slot.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-sm btn-primary"
+                                    onclick="return confirm('Confirm booking for {{ slot.date.strftime('%b %d') }} at {{ slot.start_time.strftime('%I:%M %p') }}?');">
+                                Book <i class="bi bi-check"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

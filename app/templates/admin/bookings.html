@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Bookings - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h1><i class="bi bi-bookmark-star"></i> All Bookings</h1>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active">Bookings</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('admin.export_bookings') }}" class="btn btn-success">
+                <i class="bi bi-file-earmark-excel"></i> Export to Excel
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="GET" class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label class="form-label"><i class="bi bi-calendar"></i> Filter by Date</label>
+                <select class="form-select" name="date">
+                    <option value="">All Dates</option>
+                    {% for date_row in booking_dates %}
+                    <option value="{{ date_row.date.strftime('%Y-%m-%d') }}" 
+                            {% if date_filter == date_row.date.strftime('%Y-%m-%d') %}selected{% endif %}>
+                        {{ date_row.date.strftime('%A, %B %d, %Y') }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label"><i class="bi bi-funnel"></i> Status</label>
+                <select class="form-select" name="status">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="slot_selected" {% if status_filter == 'slot_selected' %}selected{% endif %}>Slot Selected</option>
+                    <option value="interviewed" {% if status_filter == 'interviewed' %}selected{% endif %}>Interviewed</option>
+                    <option value="selected" {% if status_filter == 'selected' %}selected{% endif %}>Selected</option>
+                    <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Filter
+                </button>
+            </div>
+            <div class="col-md-2">
+                <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-light w-100">
+                    <i class="bi bi-x-lg"></i> Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Bookings Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Booking Details</h5>
+        <span class="badge bg-primary">{{ bookings|length }} bookings</span>
+    </div>
+    <div class="card-body p-0">
+        {% if bookings %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Contact</th>
+                        <th>Department</th>
+                        <th>Interview Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Booked At</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for booking in bookings %}
+                    <tr class="fade-in">
+                        <td>
+                            <div>
+                                <strong>{{ booking.user.name }}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <div>
+                                <a href="mailto:{{ booking.user.email }}" class="text-decoration-none">
+                                    <i class="bi bi-envelope"></i> {{ booking.user.email }}
+                                </a>
+                                {% if booking.user.phone %}
+                                <br>
+                                <a href="tel:{{ booking.user.phone }}" class="text-decoration-none text-muted">
+                                    <i class="bi bi-telephone"></i> {{ booking.user.phone }}
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% if booking.user.application %}
+                            {{ booking.user.application.department }}<br>
+                            <small class="text-muted">{{ booking.user.application.year }}</small>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ booking.slot.date.strftime('%A') }}</strong><br>
+                            <small>{{ booking.slot.date.strftime('%B %d, %Y') }}</small>
+                        </td>
+                        <td>
+                            <i class="bi bi-clock text-primary"></i>
+                            {{ booking.slot.start_time.strftime('%I:%M %p') }} - {{ booking.slot.end_time.strftime('%I:%M %p') }}
+                        </td>
+                        <td>
+                            {% if booking.user.application %}
+                            <span class="status-badge {{ booking.user.application.status }}">
+                                {{ booking.user.application.status.replace('_', ' ').title() }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small class="text-muted">{{ booking.booked_at.strftime('%b %d, %Y') }}</small><br>
+                            <small class="text-muted">{{ booking.booked_at.strftime('%I:%M %p') }}</small>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('admin.view_candidate', user_id=booking.user.id) }}" 
+                                   class="btn btn-sm btn-primary" title="View Candidate">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-danger" 
+                                        onclick="confirmCancelBooking({{ booking.id }}, '{{ booking.user.name }}')"
+                                        title="Cancel Booking">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state py-5">
+            <i class="bi bi-bookmark-x"></i>
+            <h5>No Bookings Found</h5>
+            <p class="text-muted">No bookings match your current filters.</p>
+            <a href="{{ url_for('admin.manage_bookings') }}" class="btn btn-primary">
+                <i class="bi bi-arrow-counterclockwise"></i> Clear Filters
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Hidden cancel form -->
+<form id="cancelBookingForm" method="POST" style="display: none;">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmCancelBooking(bookingId, candidateName) {
+    if (confirm(`Are you sure you want to cancel the booking for:\n\n${candidateName}\n\nThis will free up the slot for other candidates.`)) {
+        const form = document.getElementById('cancelBookingForm');
+        form.action = `/admin/booking/${bookingId}/cancel`;
+        form.submit();
+    }
+}
+</script>
+{% endblock %}
