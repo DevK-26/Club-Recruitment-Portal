@@ -41,10 +41,15 @@ class Config:
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
     
-    # Resend Email Configuration (Recommended - works on Render)
-    # Get free API key at https://resend.com (3,000 emails/month free)
-    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
-    RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL', 'onboarding@resend.dev')
+    # Brevo SMTP Configuration (Recommended - works on Render with any recipient)
+    # Sign up free at https://www.brevo.com (300 emails/day, no domain verification)
+    # Go to SMTP & API → SMTP tab to get credentials
+    BREVO_SMTP_SERVER = os.environ.get('BREVO_SMTP_SERVER', 'smtp-relay.brevo.com')
+    BREVO_SMTP_PORT = int(os.environ.get('BREVO_SMTP_PORT', 587))
+    BREVO_SMTP_LOGIN = os.environ.get('BREVO_SMTP_LOGIN')
+    BREVO_SMTP_PASSWORD = os.environ.get('BREVO_SMTP_PASSWORD')
+    MAIL_FROM_EMAIL = os.environ.get('MAIL_FROM_EMAIL')
+    MAIL_FROM_NAME = os.environ.get('MAIL_FROM_NAME', 'Technical Club')
     
     # Application Configuration
     CLUB_NAME = os.environ.get('CLUB_NAME', 'Tech Club')

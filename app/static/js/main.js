@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeTooltips();
     initializeTableSearch();
     initializeAnimations();
+    initializeFormLoading();
     
     // Start slot refresh if on slots page
     if (window.location.pathname.includes('/slots')) {
@@ -299,6 +300,54 @@ function formatTime(timeString) {
 }
 
 // ============================================
+// FORM LOADING STATE
+// ============================================
+function initializeFormLoading() {
+    // Add loading state to all forms with buttons
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn && !submitBtn.classList.contains('no-loading')) {
+                // Store original content
+                submitBtn.dataset.originalText = submitBtn.innerHTML;
+                
+                // Add loading state
+                submitBtn.classList.add('loading');
+                submitBtn.disabled = true;
+                
+                // Add spinner
+                const spinner = document.createElement('span');
+                spinner.className = 'spinner-border spinner-border-sm ms-2';
+                spinner.setAttribute('role', 'status');
+                submitBtn.appendChild(spinner);
+            }
+        });
+    });
+}
+
+// Reset button state (useful after AJAX calls)
+function resetButtonState(button) {
+    if (button && button.dataset.originalText) {
+        button.innerHTML = button.dataset.originalText;
+        button.classList.remove('loading');
+        button.disabled = false;
+    }
+}
+
+// ============================================
+// ENHANCED CONFIRM DIALOGS
+// ============================================
+function confirmAction(message, callback) {
+    if (confirm(message)) {
+        if (typeof callback === 'function') {
+            callback();
+        }
+        return true;
+    }
+    return false;
+}
+
+// ============================================
 // EXPORT FUNCTIONS
 // ============================================
 window.recruitmentPortal = {
@@ -307,5 +356,7 @@ window.recruitmentPortal = {
     showToast,
     updateSlotAvailability,
     formatDate,
-    formatTime
+    formatTime,
+    resetButtonState,
+    confirmAction
 };
