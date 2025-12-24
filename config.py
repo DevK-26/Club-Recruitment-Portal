@@ -33,11 +33,11 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Elastic Email Configuration (HTTP API - 100% free, no credit card)
-    # Sign up: https://elasticemail.com (100 emails/day free forever)
-    # Settings → Create API Key → Select "All" permissions
-    ELASTIC_EMAIL_API_KEY = os.environ.get('ELASTIC_EMAIL_API_KEY')
-    ELASTIC_EMAIL_FROM = os.environ.get('ELASTIC_EMAIL_FROM')  # Your email
+    # Resend Email Configuration (Beautiful professional emails)
+    # Sign up: https://resend.com (free: 100/day, 3000/month)
+    # Verify your Gmail: Settings → Verified Emails → Add email → Check inbox
+    RESEND_API_KEY = os.environ.get('RESEND_API_KEY')
+    RESEND_FROM_EMAIL = os.environ.get('RESEND_FROM_EMAIL')  # Must be verified
     
     # Application Configuration
     CLUB_NAME = os.environ.get('CLUB_NAME', 'Tech Club')
