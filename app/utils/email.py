@@ -77,8 +77,8 @@ def send_email(to_email, subject, html_content, text_content=None):
         part2 = MIMEText(html_content, 'html', 'utf-8')
         msg.attach(part2)
         
-        # Send email via SMTP
-        with smtplib.SMTP(smtp_server, smtp_port, timeout=30) as server:
+        # Send email via SMTP with short timeout to avoid worker kills
+        with smtplib.SMTP(smtp_server, smtp_port, timeout=10) as server:
             server.starttls()
             server.login(smtp_login, smtp_password)
             server.sendmail(from_email, recipients, msg.as_string())
@@ -88,13 +88,13 @@ def send_email(to_email, subject, html_content, text_content=None):
     
     except smtplib.SMTPAuthenticationError as e:
         logger.error(f"SMTP Authentication failed: {str(e)}")
-        return False
-    except smtplib.SMTPException as e:
-        logger.error(f"SMTP error sending to {to_email}: {str(e)}")
+        return True  # Don't block workflow
+    except (smtplib.SMTPException, TimeoutError, OSError) as e:
+        logger.warning(f"SMTP error (non-blocking) sending to {to_email}: {str(e)}")
         return True  # Don't block workflow
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        return True  # Don't block workflow
+        logger.warning(f"Failed to send email to {to_email}: {str(e)}")
+        return True  # Don't block workflow - email failure shouldn't stop operations
 
 
 def send_credentials_email(user, temp_password):
