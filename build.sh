@@ -3,15 +3,23 @@
 
 set -o errexit  # Exit on error
 
-# Install dependencies
+echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
-# Run database migrations
-flask db upgrade
+echo "🗄️  Running database migrations..."
+echo "DATABASE_URL is set: $([ -z "$DATABASE_URL" ] && echo "NO" || echo "YES")"
+
+# Ensure FLASK_APP is set
+export FLASK_APP=run.py
+
+# Run migrations
+python -m flask db upgrade
+
+echo "✅ Migrations completed!"
 
 # Auto-create admin if environment variables are set
 if [ ! -z "$ADMIN_EMAIL" ] && [ ! -z "$ADMIN_PASSWORD" ] && [ ! -z "$ADMIN_NAME" ]; then
-    echo "Creating admin user from environment variables..."
+    echo "👤 Creating admin user from environment variables..."
     python -c "
 from app import create_app, db
 from app.models import User
@@ -41,3 +49,5 @@ with app.app_context():
 else
     echo "ℹ️  Skipping admin creation (set ADMIN_EMAIL, ADMIN_NAME, ADMIN_PASSWORD to auto-create)"
 fi
+
+echo "🚀 Build complete!"
