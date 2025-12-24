@@ -1,15 +1,14 @@
-"""Email sending utilities - Using Mailgun HTTP API
+"""Email sending utilities - Using Elastic Email HTTP API
 
-Mailgun works perfectly on Render (HTTPS API, no SMTP blocking).
+Elastic Email is completely free (100 emails/day, no credit card required).
 
 Setup (1 minute):
-1. Sign up free at https://www.mailgun.com (5000 emails/month free)
-2. Go to Sending → Domain Settings → Click "sandbox..." domain
-3. Copy the API Key and domain name
-4. Add authorized recipients (for sandbox mode): Settings → Authorized Recipients
-5. Set environment variables:
-   - MAILGUN_API_KEY=your-api-key-here
-   - MAILGUN_DOMAIN=sandboxXXXXXX.mailgun.org
+1. Sign up free at https://elasticemail.com
+2. Go to Settings → Create API Key → Select "All" permissions
+3. Copy the API key
+4. Set environment variables:
+   - ELASTIC_EMAIL_API_KEY=your-api-key
+   - ELASTIC_EMAIL_FROM=your-email@gmail.com
 
 That's it! Works immediately on Render.
 """
@@ -21,55 +20,57 @@ logger = logging.getLogger(__name__)
 
 
 def is_email_configured():
-    """Check if Mailgun is properly configured"""
-    api_key = current_app.config.get('MAILGUN_API_KEY')
-    domain = current_app.config.get('MAILGUN_DOMAIN')
-    return bool(api_key and domain)
+    """Check if Elastic Email is properly configured"""
+    api_key = current_app.config.get('ELASTIC_EMAIL_API_KEY')
+    from_email = current_app.config.get('ELASTIC_EMAIL_FROM')
+    return bool(api_key and from_email)
 
 
 def send_email(to_email, subject, html_content, text_content=None):
-    """Send email using Mailgun HTTP API
+    """Send email using Elastic Email HTTP API
     
     Returns:
         bool: True always (never blocks workflow)
     """
     if not is_email_configured():
-        logger.warning(f"Mailgun not configured. Skipping email to {to_email}")
+        logger.warning(f"Elastic Email not configured. Skipping email to {to_email}")
         return True
     
     try:
-        api_key = current_app.config['MAILGUN_API_KEY']
-        domain = current_app.config['MAILGUN_DOMAIN']
-        from_email = current_app.config.get('MAILGUN_FROM_EMAIL', f'noreply@{domain}')
+        api_key = current_app.config['ELASTIC_EMAIL_API_KEY']
+        from_email = current_app.config['ELASTIC_EMAIL_FROM']
         from_name = current_app.config.get('CLUB_NAME', 'Tech Club')
         
-        # Mailgun API endpoint
-        url = f"https://api.mailgun.net/v3/{domain}/messages"
+        # Elastic Email API endpoint
+        url = "https://api.elasticemail.com/v2/email/send"
         
         # Prepare data
         data = {
-            'from': f'{from_name} <{from_email}>',
+            'apikey': api_key,
+            'from': from_email,
+            'fromName': from_name,
             'to': to_email,
             'subject': subject,
-            'html': html_content
+            'bodyHtml': html_content,
+            'isTransactional': True
         }
         
         if text_content:
-            data['text'] = text_content
+            data['bodyText'] = text_content
         
         # Send request
-        response = requests.post(
-            url,
-            auth=('api', api_key),
-            data=data,
-            timeout=10
-        )
+        response = requests.post(url, data=data, timeout=10)
         
         if response.status_code == 200:
-            logger.info(f"Email sent to {to_email}")
-            return True
+            result = response.json()
+            if result.get('success'):
+                logger.info(f"Email sent to {to_email}")
+                return True
+            else:
+                logger.warning(f"Elastic Email error: {result.get('error', 'Unknown error')}")
+                return True  # Don't block workflow
         else:
-            logger.warning(f"Mailgun returned {response.status_code}: {response.text}")
+            logger.warning(f"Elastic Email returned {response.status_code}")
             return True  # Don't block workflow
         
     except Exception as e:

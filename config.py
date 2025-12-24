@@ -33,20 +33,11 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Mailgun Email Configuration (HTTP API - works on Render!)
-    # Sign up free: https://www.mailgun.com (5000 emails/month)
-    # Use sandbox domain for testing (add authorized recipients)
-    # Or verify your own domain for unlimited recipients
-    MAILGUN_API_KEY = os.environ.get('MAILGUN_API_KEY')
-    MAILGUN_DOMAIN = os.environ.get('MAILGUN_DOMAIN')  # e.g., sandbox123.mailgun.org
-    MAILGUN_FROM_EMAIL = os.environ.get('MAILGUN_FROM_EMAIL')  # Optional, defaults to noreply@domain
-    
-    # Legacy mail config (not used but kept for compatibility)
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 587
-    MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    # Elastic Email Configuration (HTTP API - 100% free, no credit card)
+    # Sign up: https://elasticemail.com (100 emails/day free forever)
+    # Settings → Create API Key → Select "All" permissions
+    ELASTIC_EMAIL_API_KEY = os.environ.get('ELASTIC_EMAIL_API_KEY')
+    ELASTIC_EMAIL_FROM = os.environ.get('ELASTIC_EMAIL_FROM')  # Your email
     
     # Application Configuration
     CLUB_NAME = os.environ.get('CLUB_NAME', 'Tech Club')
