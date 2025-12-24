@@ -64,9 +64,19 @@ def send_email(to_email, subject, html_content):
         
         result = mailjet.send.create(data=data)
         
+        # Log detailed response
+        logger.info(f"Mailjet response for {to_email}: Status {result.status_code}, Body: {result.json()}")
+        
         if result.status_code == 200:
-            logger.info(f"Email sent to {to_email}")
-            return True
+            response_data = result.json()
+            messages = response_data.get('Messages', [])
+            if messages and messages[0].get('Status') == 'success':
+                logger.info(f"✓ Email successfully sent to {to_email}")
+                return True
+            else:
+                logger.error(f"✗ Mailjet accepted but may not deliver to {to_email}. Check sender verification!")
+                logger.error(f"Response: {response_data}")
+                return True  # Don't block workflow
         else:
             logger.warning(f"Mailjet returned {result.status_code}: {result.json()}")
             return True  # Don't block workflow
