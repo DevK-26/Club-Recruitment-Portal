@@ -88,6 +88,8 @@ def create_app(config_name='default'):
 
 def create_admin_from_env(app):
     """Create admin user from environment variables if not exists"""
+    import bcrypt
+    
     admin_email = os.environ.get('ADMIN_EMAIL')
     admin_name = os.environ.get('ADMIN_NAME')
     admin_password = os.environ.get('ADMIN_PASSWORD')
@@ -102,14 +104,17 @@ def create_admin_from_env(app):
             if existing:
                 return  # Admin already exists
             
+            # Hash password with bcrypt
+            password_hash = bcrypt.hashpw(admin_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            
             admin = User(
                 name=admin_name,
                 email=admin_email,
+                password_hash=password_hash,
                 role='admin',
                 is_active=True,
                 first_login=False
             )
-            admin.set_password(admin_password)
             db.session.add(admin)
             db.session.commit()
             app.logger.info(f'Admin user created: {admin_email}')
