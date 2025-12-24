@@ -1,6 +1,10 @@
 """Create admin user from environment variables"""
 import os
 import sys
+
+# Ensure FLASK_APP is set
+os.environ.setdefault('FLASK_APP', 'run.py')
+
 from app import create_app, db
 from app.models import User
 
