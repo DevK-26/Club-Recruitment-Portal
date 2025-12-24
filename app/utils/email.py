@@ -1,63 +1,63 @@
-"""Email sending utilities - Using Gmail SMTP
+"""Email sending utilities - Using SendGrid HTTP API
 
-Gmail SMTP is the simplest and most reliable method:
-1. Use your Gmail account
-2. Enable 2-Factor Authentication on your Google account
-3. Generate an App Password: https://myaccount.google.com/apppasswords
-4. Set environment variables:
-   - MAIL_USERNAME=your-email@gmail.com
-   - MAIL_PASSWORD=your-16-char-app-password (no spaces)
+SendGrid works on Render because it uses HTTPS (not blocked SMTP ports).
 
-That's it! No external service signup required.
+Setup (2 minutes):
+1. Sign up free at https://sendgrid.com (100 emails/day free)
+2. Go to Settings → API Keys
+3. Click "Create API Key" → Full Access
+4. Copy the API key (starts with SG.)
+5. Set environment variable: SENDGRID_API_KEY=SG.your-key-here
+6. Set environment variable: SENDGRID_FROM_EMAIL=your-email@gmail.com
+
+That's it! No domain verification needed for 100 emails/day.
 """
 from flask import current_app
 import logging
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail, Email, To, Content
 
 logger = logging.getLogger(__name__)
 
 
 def is_email_configured():
-    """Check if Gmail SMTP is properly configured"""
-    username = current_app.config.get('MAIL_USERNAME')
-    password = current_app.config.get('MAIL_PASSWORD')
-    return bool(username and password)
+    """Check if SendGrid is properly configured"""
+    api_key = current_app.config.get('SENDGRID_API_KEY')
+    from_email = current_app.config.get('SENDGRID_FROM_EMAIL')
+    return bool(api_key and from_email)
 
 
 def send_email(to_email, subject, html_content, text_content=None):
-    """Send email using Gmail SMTP
+    """Send email using SendGrid HTTP API
     
     Returns:
         bool: True always (never blocks workflow)
     """
     if not is_email_configured():
-        logger.warning(f"Email not configured. Skipping email to {to_email}")
+        logger.warning(f"SendGrid not configured. Skipping email to {to_email}")
         return True
     
     try:
-        username = current_app.config['MAIL_USERNAME']
-        password = current_app.config['MAIL_PASSWORD']
+        api_key = current_app.config['SENDGRID_API_KEY']
+        from_email = current_app.config['SENDGRID_FROM_EMAIL']
         
         # Create message
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = username
-        msg['To'] = to_email if isinstance(to_email, str) else ', '.join(to_email)
+        message = Mail(
+            from_email=Email(from_email),
+            to_emails=To(to_email),
+            subject=subject,
+            html_content=Content("text/html", html_content)
+        )
         
+        # Add plain text if provided
         if text_content:
-            msg.attach(MIMEText(text_content, 'plain', 'utf-8'))
-        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+            message.add_content(Content("text/plain", text_content))
         
-        # Send via Gmail SMTP
-        with smtplib.SMTP('smtp.gmail.com', 587, timeout=10) as server:
-            server.starttls()
-            server.login(username, password)
-            recipients = [to_email] if isinstance(to_email, str) else to_email
-            server.sendmail(username, recipients, msg.as_string())
+        # Send via SendGrid API
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
         
-        logger.info(f"Email sent to {to_email}")
+        logger.info(f"Email sent to {to_email} (status: {response.status_code})")
         return True
         
     except Exception as e:

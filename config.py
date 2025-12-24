@@ -33,15 +33,18 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Gmail SMTP Configuration (Simple and Reliable)
-    # 1. Enable 2FA on your Google account
-    # 2. Generate App Password: https://myaccount.google.com/apppasswords
-    # 3. Set MAIL_USERNAME and MAIL_PASSWORD in environment
+    # SendGrid Email Configuration (Uses HTTPS - works on Render!)
+    # Sign up free: https://sendgrid.com (100 emails/day)
+    # Get API key: Settings → API Keys → Create API Key
+    SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY')  # Starts with SG.
+    SENDGRID_FROM_EMAIL = os.environ.get('SENDGRID_FROM_EMAIL')  # Your email
+    
+    # Legacy mail config (not used but kept for compatibility)
     MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 587
     MAIL_USE_TLS = True
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')  # your-email@gmail.com
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')  # 16-char app password
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     
     # Application Configuration
     CLUB_NAME = os.environ.get('CLUB_NAME', 'Tech Club')
