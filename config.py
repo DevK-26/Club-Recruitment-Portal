@@ -33,23 +33,15 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
     
-    # Mail Configuration (Legacy Flask-Mail - kept for compatibility)
-    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_USERNAME')
-    
-    # Brevo SMTP Configuration (Recommended - works on Render with any recipient)
-    # Sign up free at https://www.brevo.com (300 emails/day, no domain verification)
-    # Go to SMTP & API → SMTP tab to get credentials
-    BREVO_SMTP_SERVER = os.environ.get('BREVO_SMTP_SERVER', 'smtp-relay.brevo.com')
-    BREVO_SMTP_PORT = int(os.environ.get('BREVO_SMTP_PORT', 587))
-    BREVO_SMTP_LOGIN = os.environ.get('BREVO_SMTP_LOGIN')
-    BREVO_SMTP_PASSWORD = os.environ.get('BREVO_SMTP_PASSWORD')
-    MAIL_FROM_EMAIL = os.environ.get('MAIL_FROM_EMAIL')
-    MAIL_FROM_NAME = os.environ.get('MAIL_FROM_NAME', 'Technical Club')
+    # Gmail SMTP Configuration (Simple and Reliable)
+    # 1. Enable 2FA on your Google account
+    # 2. Generate App Password: https://myaccount.google.com/apppasswords
+    # 3. Set MAIL_USERNAME and MAIL_PASSWORD in environment
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USE_TLS = True
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')  # your-email@gmail.com
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')  # 16-char app password
     
     # Application Configuration
     CLUB_NAME = os.environ.get('CLUB_NAME', 'Tech Club')
