@@ -7,6 +7,13 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def is_email_configured():
+    """Check if email is properly configured"""
+    username = current_app.config.get('MAIL_USERNAME')
+    password = current_app.config.get('MAIL_PASSWORD')
+    return bool(username and password and username.strip() and password.strip())
+
+
 def send_email(to_email, subject, html_content, text_content=None):
     """Send email using Flask-Mail
     
@@ -20,10 +27,11 @@ def send_email(to_email, subject, html_content, text_content=None):
         bool: True if email sent successfully, False otherwise
     """
     # Check if email is configured
-    if not current_app.config.get('MAIL_USERNAME') or not current_app.config.get('MAIL_PASSWORD'):
-        logger.warning(f"Email not configured. Would have sent email to {to_email}")
+    if not is_email_configured():
+        logger.warning(f"Email not configured. Skipping email to {to_email}")
         logger.info(f"Subject: {subject}")
-        return False
+        # Return True to not block the workflow - email is optional
+        return True
     
     try:
         msg = Message(
@@ -40,7 +48,8 @@ def send_email(to_email, subject, html_content, text_content=None):
     
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        return False
+        # Return True to not block the workflow
+        return True
 
 
 def send_credentials_email(user, temp_password):

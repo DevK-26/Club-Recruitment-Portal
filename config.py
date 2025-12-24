@@ -18,6 +18,14 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
     
+    # Connection pool settings for Neon serverless
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_pre_ping': True,  # Test connections before using
+        'pool_recycle': 300,    # Recycle connections after 5 minutes
+        'pool_size': 5,         # Max connections in pool
+        'max_overflow': 10,     # Extra connections if pool is full
+    }
+    
     # Session Configuration
     PERMANENT_SESSION_LIFETIME = timedelta(seconds=int(os.environ.get('SESSION_TIMEOUT', 3600)))
     SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
