@@ -407,7 +407,8 @@ def send_announcement_email(candidates, title, content):
     club_name = current_app.config.get('CLUB_NAME', 'Tech Club')
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     
-    subject = f"[{club_name}] {title}"
+    # Simple subject without brackets - less likely to be flagged as spam
+    subject = f"{title} - {club_name}"
     
     success = 0
     failed = 0
@@ -428,8 +429,8 @@ def send_announcement_email(candidates, title, content):
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Announcement: {title}</h1>
-                                    <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 16px;">{club_name}</p>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">{title}</h1>
+                                    <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 16px;">{club_name} Recruitment</p>
                                 </td>
                             </tr>
                             <!-- Content -->
