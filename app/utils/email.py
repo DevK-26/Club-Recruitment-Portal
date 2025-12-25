@@ -13,9 +13,33 @@ Mailjet Setup (NO DOMAIN NEEDED):
 """
 from flask import current_app
 import logging
+import re
 from mailjet_rest import Client
 
 logger = logging.getLogger(__name__)
+
+
+def strip_html_to_text(html):
+    """Convert HTML to plain text for email"""
+    # Remove style and script tags with content
+    text = re.sub(r'<style[^>]*>.*?</style>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    # Replace br and p tags with newlines
+    text = re.sub(r'<br\s*/?>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</p>', '\n\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</tr>', '\n', text, flags=re.IGNORECASE)
+    text = re.sub(r'</li>', '\n', text, flags=re.IGNORECASE)
+    # Remove all remaining HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Decode common HTML entities
+    text = text.replace('&nbsp;', ' ').replace('&amp;', '&')
+    text = text.replace('&lt;', '<').replace('&gt;', '>')
+    text = text.replace('&quot;', '"').replace('&#39;', "'")
+    # Clean up whitespace
+    text = re.sub(r'\n\s*\n', '\n\n', text)
+    text = re.sub(r' +', ' ', text)
+    text = re.sub(r'\n ', '\n', text)
+    return text.strip()
 
 
 def is_email_configured():
@@ -44,6 +68,9 @@ def send_email(to_email, subject, html_content):
         
         mailjet = Client(auth=(api_key, secret_key), version='v3.1')
         
+        # Generate plain text version (critical for avoiding spam filters)
+        text_content = strip_html_to_text(html_content)
+        
         data = {
             'Messages': [
                 {
@@ -57,6 +84,7 @@ def send_email(to_email, subject, html_content):
                         }
                     ],
                     "Subject": subject,
+                    "TextPart": text_content,
                     "HTMLPart": html_content
                 }
             ]
