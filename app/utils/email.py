@@ -138,7 +138,7 @@ def send_credentials_email(user, temp_password):
                                     <tr>
                                         <td style="padding: 16px;">
                                             <p style="margin: 0; color: #92400e; font-size: 14px;">
-                                                ⚠️ <strong>Important:</strong> You must change your password on first login for security reasons.
+                                                <strong>Important:</strong> You must change your password on first login for security reasons.
                                             </p>
                                         </td>
                                     </tr>
@@ -167,8 +167,11 @@ def send_credentials_email(user, temp_password):
                                 <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">
                                     Need help? Contact us at <a href="mailto:{support_email}" style="color: #0d9488;">{support_email}</a>
                                 </p>
+                                <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                                    You received this email because you registered for {club_name} recruitment.
+                                </p>
                                 <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                                    © 2025 {club_name}. All rights reserved.
+                                    {club_name}
                                 </p>
                             </td>
                         </tr>
@@ -207,7 +210,7 @@ def send_slot_confirmation_email(user, slot):
                         <!-- Header -->
                         <tr>
                             <td style="background: linear-gradient(135deg, #059669 0%, #047857 100%); padding: 40px; text-align: center;">
-                                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">✓ Interview Confirmed</h1>
+                                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Interview Confirmed</h1>
                                 <p style="color: #d1fae5; margin: 10px 0 0 0; font-size: 16px;">Your slot has been booked</p>
                             </td>
                         </tr>
@@ -224,7 +227,7 @@ def send_slot_confirmation_email(user, slot):
                                 <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px; border-left: 4px solid #10b981; margin: 0 0 30px 0;">
                                     <tr>
                                         <td style="padding: 24px;">
-                                            <h3 style="margin: 0 0 15px 0; color: #065f46; font-size: 18px;">📅 Interview Details</h3>
+                                            <h3 style="margin: 0 0 15px 0; color: #065f46; font-size: 18px;">Interview Details</h3>
                                             <p style="margin: 0 0 12px 0; color: #047857; font-size: 14px;">
                                                 <strong>Date & Time:</strong><br>
                                                 <span style="color: #065f46; font-size: 16px;">{slot_time}</span>
@@ -243,7 +246,7 @@ def send_slot_confirmation_email(user, slot):
                                     <tr>
                                         <td style="padding: 16px;">
                                             <p style="margin: 0; color: #1e40af; font-size: 14px;">
-                                                💡 <strong>Tip:</strong> Please arrive 5-10 minutes early. Good luck!
+                                                <strong>Tip:</strong> Please arrive 5-10 minutes early. Good luck!
                                             </p>
                                         </td>
                                     </tr>
@@ -260,8 +263,11 @@ def send_slot_confirmation_email(user, slot):
                                 <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">
                                     Need help? Contact us at <a href="mailto:{support_email}" style="color: #0d9488;">{support_email}</a>
                                 </p>
+                                <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                                    You received this email because you booked an interview slot with {club_name}.
+                                </p>
                                 <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                                    © 2025 {club_name}. All rights reserved.
+                                    {club_name}
                                 </p>
                             </td>
                         </tr>
@@ -327,7 +333,7 @@ def send_password_reset_email(user, reset_token):
                                     <tr>
                                         <td style="padding: 16px;">
                                             <p style="margin: 0; color: #92400e; font-size: 14px;">
-                                                ⏰ This link will expire in 1 hour for security reasons.
+                                                This link will expire in 1 hour for security reasons.
                                             </p>
                                         </td>
                                     </tr>
@@ -349,8 +355,11 @@ def send_password_reset_email(user, reset_token):
                                 <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">
                                     Need help? Contact us at <a href="mailto:{support_email}" style="color: #0d9488;">{support_email}</a>
                                 </p>
+                                <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                                    You received this email because you requested a password reset for your {club_name} account.
+                                </p>
                                 <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                                    © 2025 {club_name}. All rights reserved.
+                                    {club_name}
                                 </p>
                             </td>
                         </tr>
@@ -391,7 +400,7 @@ def send_announcement_email(announcement, candidates):
                             <!-- Header -->
                             <tr>
                                 <td style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); padding: 40px; text-align: center;">
-                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">📢 {announcement.title}</h1>
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600;">Announcement: {announcement.title}</h1>
                                     <p style="color: #94a3b8; margin: 10px 0 0 0; font-size: 16px;">{club_name}</p>
                                 </td>
                             </tr>
@@ -422,8 +431,11 @@ def send_announcement_email(announcement, candidates):
                                     <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">
                                         Need help? Contact us at <a href="mailto:{support_email}" style="color: #0d9488;">{support_email}</a>
                                     </p>
+                                    <p style="margin: 0 0 8px 0; color: #94a3b8; font-size: 11px;">
+                                        You received this email because you are registered for {club_name} recruitment.
+                                    </p>
                                     <p style="margin: 0; color: #94a3b8; font-size: 12px;">
-                                        © 2025 {club_name}. All rights reserved.
+                                        {club_name}
                                     </p>
                                 </td>
                             </tr>
