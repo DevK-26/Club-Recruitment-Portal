@@ -14,10 +14,12 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(15))
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.Enum('admin', 'candidate', name='user_roles'), default='candidate')
+    is_super_admin = db.Column(db.Boolean, default=False)  # Only true for initial admin
     first_login = db.Column(db.Boolean, default=True)
     is_active = db.Column(db.Boolean, default=True)
     failed_login_attempts = db.Column(db.Integer, default=0)
     locked_until = db.Column(db.DateTime, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)  # Who created this admin
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships - use lazy='select' (default) for on-demand loading

@@ -214,6 +214,114 @@ def send_credentials_email(user, temp_password):
     return send_email(user.email, subject, html)
 
 
+def send_admin_credentials_email(user, temp_password):
+    """Send admin login credentials with professional design"""
+    club_name = current_app.config.get('CLUB_NAME', 'Tech Club')
+    base_url = current_app.config.get('BASE_URL', 'http://localhost:5000')
+    support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
+    login_url = f"{base_url}/auth/login"
+    
+    subject = f"Admin Account Created - {club_name}"
+    
+    html = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f1f5f9;">
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f1f5f9; padding: 40px 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: linear-gradient(135deg, #422a17 0%, #7c4a2d 100%); padding: 40px; text-align: center;">
+                                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">Admin Account Created</h1>
+                                <p style="color: #facc15; margin: 10px 0 0 0; font-size: 16px;">{club_name}</p>
+                            </td>
+                        </tr>
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 40px;">
+                                <p style="color: #334155; font-size: 16px; margin: 0 0 20px 0;">Hi <strong>{user.name}</strong>,</p>
+                                
+                                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin: 0 0 30px 0;">
+                                    You have been granted <strong>Admin access</strong> to the {club_name} Recruitment Portal. Use the following credentials to log in:
+                                </p>
+                                
+                                <!-- Credentials Box -->
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); border-radius: 12px; border-left: 4px solid #f97316; margin: 0 0 30px 0;">
+                                    <tr>
+                                        <td style="padding: 24px;">
+                                            <p style="margin: 0 0 12px 0; color: #9a3412; font-size: 14px;">
+                                                <strong>Login URL:</strong><br>
+                                                <a href="{login_url}" style="color: #ea580c; word-break: break-all;">{login_url}</a>
+                                            </p>
+                                            <p style="margin: 0 0 12px 0; color: #9a3412; font-size: 14px;">
+                                                <strong>Email:</strong><br>
+                                                <span style="color: #7c2d12;">{user.email}</span>
+                                            </p>
+                                            <p style="margin: 0; color: #9a3412; font-size: 14px;">
+                                                <strong>Temporary Password:</strong><br>
+                                                <code style="background-color: #ffffff; padding: 4px 8px; border-radius: 4px; font-family: monospace; color: #0f172a; font-size: 16px;">{temp_password}</code>
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <!-- Warning -->
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fef3c7; border-radius: 8px; margin: 0 0 30px 0;">
+                                    <tr>
+                                        <td style="padding: 16px;">
+                                            <p style="margin: 0; color: #92400e; font-size: 14px;">
+                                                <strong>Important:</strong> You must change your password on first login for security reasons.
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                                
+                                <p style="color: #475569; font-size: 15px; margin: 0 0 15px 0;">As an admin, you will be able to:</p>
+                                <ul style="color: #64748b; font-size: 14px; line-height: 1.8; margin: 0 0 30px 0; padding-left: 20px;">
+                                    <li>Manage candidates and their applications</li>
+                                    <li>Create and manage interview slots</li>
+                                    <li>View bookings and update statuses</li>
+                                    <li>Create announcements</li>
+                                </ul>
+                                
+                                <!-- CTA Button -->
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td align="center">
+                                            <a href="{login_url}" style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px;">Login as Admin</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background-color: #fdf8f6; padding: 24px 40px; text-align: center; border-top: 1px solid #eaddd7;">
+                                <p style="margin: 0 0 8px 0; color: #64748b; font-size: 13px;">
+                                    Need help? Contact us at <a href="mailto:{support_email}" style="color: #ea580c;">{support_email}</a>
+                                </p>
+                                <p style="margin: 0; color: #7c4a2d; font-size: 12px;">
+                                    {club_name}
+                                </p>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+    
+    return send_email(user.email, subject, html)
+
+
 def send_slot_confirmation_email(user, slot):
     """Send slot booking confirmation with professional design"""
     club_name = current_app.config.get('CLUB_NAME', 'Tech Club')

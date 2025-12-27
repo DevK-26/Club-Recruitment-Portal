@@ -2,7 +2,7 @@
 from flask import render_template, redirect, url_for, flash, request, jsonify, Response, current_app
 from flask_login import login_required, current_user
 from app.admin import admin_bp
-from app.admin.utils import admin_required, parse_excel_file, validate_candidate_data
+from app.admin.utils import admin_required, parse_excel_file, validate_candidate_data, super_admin_required
 from app import db
 from app.models import User, Application, InterviewSlot, SlotBooking, Announcement, AuditLog
 from app.auth.utils import create_candidate
@@ -922,3 +922,138 @@ def admin_cancel_booking(booking_id):
         flash(f'Error cancelling booking: {str(e)}', 'danger')
     
     return redirect(request.referrer or url_for('admin.manage_bookings'))
+
+
+# ============================================
+# ADMIN MANAGEMENT (Super Admin Only)
+# ============================================
+
+@admin_bp.route('/admins')
+@login_required
+@super_admin_required
+def manage_admins():
+    """View and manage admin users (super admin only)"""
+    admins = User.query.filter_by(role='admin').order_by(User.created_at.desc()).all()
+    return render_template('admin/manage_admins.html', admins=admins)
+
+
+@admin_bp.route('/admins/create', methods=['GET', 'POST'])
+@login_required
+@super_admin_required
+def create_admin():
+    """Create a new admin user (super admin only)"""
+    from app.utils.security import hash_password, generate_random_password
+    from app.utils.email import send_admin_credentials_email
+    
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        phone = request.form.get('phone', '').strip()
+        send_email = request.form.get('send_email') == 'on'
+        
+        # Validation
+        if not name or not email:
+            flash('Name and email are required.', 'danger')
+            return render_template('admin/create_admin.html')
+        
+        # Check if email already exists
+        if User.query.filter_by(email=email).first():
+            flash('An account with this email already exists.', 'danger')
+            return render_template('admin/create_admin.html')
+        
+        try:
+            # Generate temporary password
+            temp_password = generate_random_password()
+            
+            # Create admin user
+            new_admin = User(
+                name=name,
+                email=email,
+                phone=phone,
+                password_hash=hash_password(temp_password),
+                role='admin',
+                is_super_admin=False,  # Regular admin, not super admin
+                is_active=True,
+                first_login=True,  # Must change password on first login
+                created_by=current_user.id
+            )
+            
+            db.session.add(new_admin)
+            db.session.commit()
+            
+            # Send credentials email if requested
+            if send_email:
+                send_admin_credentials_email(new_admin, temp_password)
+                flash(f'Admin "{name}" created successfully. Login credentials sent to {email}.', 'success')
+            else:
+                flash(f'Admin "{name}" created successfully. Temporary password: {temp_password}', 'success')
+            
+            log_audit(current_user.id, 'CREATE_ADMIN', f'Created admin user: {email}')
+            
+            return redirect(url_for('admin.manage_admins'))
+            
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error creating admin: {str(e)}")
+            flash(f'Error creating admin: {str(e)}', 'danger')
+    
+    return render_template('admin/create_admin.html')
+
+
+@admin_bp.route('/admins/<int:admin_id>/toggle', methods=['POST'])
+@login_required
+@super_admin_required
+def toggle_admin_status(admin_id):
+    """Activate/Deactivate an admin user (super admin only)"""
+    admin = User.query.get_or_404(admin_id)
+    
+    # Cannot deactivate super admin
+    if admin.is_super_admin:
+        flash('Cannot deactivate the super admin.', 'danger')
+        return redirect(url_for('admin.manage_admins'))
+    
+    # Cannot modify self
+    if admin.id == current_user.id:
+        flash('Cannot modify your own account.', 'danger')
+        return redirect(url_for('admin.manage_admins'))
+    
+    admin.is_active = not admin.is_active
+    db.session.commit()
+    
+    status = 'activated' if admin.is_active else 'deactivated'
+    flash(f'Admin "{admin.name}" has been {status}.', 'success')
+    log_audit(current_user.id, 'TOGGLE_ADMIN', f'{status.capitalize()} admin: {admin.email}')
+    
+    return redirect(url_for('admin.manage_admins'))
+
+
+@admin_bp.route('/admins/<int:admin_id>/delete', methods=['POST'])
+@login_required
+@super_admin_required
+def delete_admin(admin_id):
+    """Delete an admin user (super admin only)"""
+    admin = User.query.get_or_404(admin_id)
+    
+    # Cannot delete super admin
+    if admin.is_super_admin:
+        flash('Cannot delete the super admin.', 'danger')
+        return redirect(url_for('admin.manage_admins'))
+    
+    # Cannot delete self
+    if admin.id == current_user.id:
+        flash('Cannot delete your own account.', 'danger')
+        return redirect(url_for('admin.manage_admins'))
+    
+    email = admin.email
+    name = admin.name
+    
+    try:
+        db.session.delete(admin)
+        db.session.commit()
+        flash(f'Admin "{name}" has been deleted.', 'success')
+        log_audit(current_user.id, 'DELETE_ADMIN', f'Deleted admin: {email}')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting admin: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.manage_admins'))

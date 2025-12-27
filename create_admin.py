@@ -51,22 +51,23 @@ def create_admin():
             sys.exit(1)
         
         # Create new admin
-        print(f"\nCreating admin user: {admin_email}")
+        print(f"\nCreating super admin user: {admin_email}")
         try:
             admin = User(
                 name=admin_name,
                 email=admin_email,
                 role='admin',
+                is_super_admin=True,  # Initial admin is super admin
                 is_active=True,
                 first_login=False
             )
             admin.set_password(admin_password)
             db.session.add(admin)
             db.session.commit()
-            print(f"✓ Admin user created successfully!")
+            print(f"✓ Super admin user created successfully!")
             print(f"  Email: {admin_email}")
             print(f"  Name: {admin_name}")
-            print(f"  Role: admin")
+            print(f"  Role: admin (SUPER ADMIN)")
             print("=" * 60)
         except Exception as e:
             print(f"✗ Error creating admin user: {str(e)}")

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Create Admin - {{ CLUB_NAME }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="bi bi-person-plus"></i> Create New Admin</h1>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_admins') }}">Manage Admins</a></li>
+            <li class="breadcrumb-item active">Create Admin</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-shield-plus"></i> New Admin Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('admin.create_admin') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="Enter admin's full name" required>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   placeholder="admin@example.com" required>
+                        </div>
+                        <div class="form-text">This will be used as the login username.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   placeholder="+1234567890">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="send_email" name="send_email" checked>
+                            <label class="form-check-label" for="send_email">
+                                Send login credentials via email
+                            </label>
+                        </div>
+                        <div class="form-text">If unchecked, the temporary password will be shown on screen.</div>
+                    </div>
+                    
+                    <!-- Info Box -->
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> A temporary password will be generated automatically. The new admin will be required to change it on first login.
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-person-plus"></i> Create Admin
+                        </button>
+                        <a href="{{ url_for('admin.manage_admins') }}" class="btn btn-light">
+                            <i class="bi bi-x-lg"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Permissions Info -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title"><i class="bi bi-key text-warning"></i> Admin Permissions</h6>
+                <p class="text-muted mb-2">The new admin will be able to:</p>
+                <ul class="mb-0 text-muted small">
+                    <li>View and manage candidates</li>
+                    <li>Create and manage interview slots</li>
+                    <li>View and manage bookings</li>
+                    <li>Create announcements</li>
+                    <li>Export data and reports</li>
+                </ul>
+                <hr>
+                <p class="text-muted mb-0 small">
+                    <i class="bi bi-exclamation-triangle text-warning"></i> 
+                    <strong>Note:</strong> Only you (Super Admin) can create or manage admin accounts.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

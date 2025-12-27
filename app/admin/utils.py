@@ -20,6 +20,21 @@ def admin_required(f):
     return decorated_function
 
 
+def super_admin_required(f):
+    """Decorator to require super admin (initial admin only)"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('auth.login'))
+        if current_user.role != 'admin':
+            abort(403)
+        if not current_user.is_super_admin:
+            flash('Only the super admin can access this feature.', 'danger')
+            return redirect(url_for('admin.dashboard'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 def parse_excel_file(file):
     """Parse Excel or CSV file and return DataFrame
     
