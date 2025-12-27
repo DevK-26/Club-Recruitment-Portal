@@ -1008,7 +1008,7 @@ def toggle_admin_status(admin_id):
     admin = User.query.get_or_404(admin_id)
     
     # Cannot deactivate super admin
-    if admin.is_super_admin:
+    if admin.check_is_super_admin:
         flash('Cannot deactivate the super admin.', 'danger')
         return redirect(url_for('admin.manage_admins'))
     
@@ -1035,7 +1035,7 @@ def delete_admin(admin_id):
     admin = User.query.get_or_404(admin_id)
     
     # Cannot delete super admin
-    if admin.is_super_admin:
+    if admin.check_is_super_admin:
         flash('Cannot delete the super admin.', 'danger')
         return redirect(url_for('admin.manage_admins'))
     

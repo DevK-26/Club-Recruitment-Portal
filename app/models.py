@@ -1,4 +1,5 @@
 """Database models for recruitment system"""
+import os
 from datetime import datetime
 from app import db
 from flask_login import UserMixin
@@ -28,6 +29,20 @@ class User(UserMixin, db.Model):
     created_slots = db.relationship('InterviewSlot', foreign_keys='InterviewSlot.created_by', backref='creator', lazy='dynamic')
     created_announcements = db.relationship('Announcement', foreign_keys='Announcement.created_by', backref='creator', lazy='dynamic')
     audit_logs = db.relationship('AuditLog', backref='user', cascade='all, delete-orphan', lazy='dynamic')
+    
+    @property
+    def check_is_super_admin(self):
+        """Check if user is super admin - works even without migration by checking env email"""
+        # First try the database column
+        try:
+            if self.is_super_admin:
+                return True
+        except:
+            pass
+        
+        # Fallback: check if email matches ADMIN_EMAIL from environment
+        admin_email = os.environ.get('ADMIN_EMAIL', '')
+        return self.role == 'admin' and self.email.lower() == admin_email.lower()
     
     def __repr__(self):
         return f'<User {self.email}>'

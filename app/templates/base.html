@@ -112,7 +112,7 @@
                             <i class="bi bi-megaphone"></i> Announcements
                         </a>
                     </li>
-                    {% if current_user.is_super_admin %}
+                    {% if current_user.check_is_super_admin %}
                     <li class="nav-item">
                         <a class="nav-link {% if request.endpoint in ['admin.manage_admins', 'admin.create_admin'] %}active{% endif %}" href="{{ url_for('admin.manage_admins') }}">
                             <i class="bi bi-shield-lock"></i> Admins

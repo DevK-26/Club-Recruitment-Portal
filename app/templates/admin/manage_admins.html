@@ -46,8 +46,8 @@
                     <tr class="{% if not admin.is_active %}table-secondary{% endif %}">
                         <td>
                             <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-sm bg-{{ 'warning' if admin.is_super_admin else 'primary' }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                                    <i class="bi bi-{{ 'star-fill' if admin.is_super_admin else 'person-fill' }}"></i>
+                                <div class="avatar-sm bg-{{ 'warning' if admin.check_is_super_admin else 'primary' }} text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-{{ 'star-fill' if admin.check_is_super_admin else 'person-fill' }}"></i>
                                 </div>
                                 <div>
                                     <strong>{{ admin.name }}</strong>
@@ -60,7 +60,7 @@
                         <td>{{ admin.email }}</td>
                         <td>{{ admin.phone or '-' }}</td>
                         <td>
-                            {% if admin.is_super_admin %}
+                            {% if admin.check_is_super_admin %}
                             <span class="badge bg-warning text-dark">
                                 <i class="bi bi-star-fill"></i> Super Admin
                             </span>
@@ -79,7 +79,7 @@
                             <small class="text-muted">{{ admin.created_at.strftime('%b %d, %Y') }}</small>
                         </td>
                         <td>
-                            {% if not admin.is_super_admin and admin.id != current_user.id %}
+                            {% if not admin.check_is_super_admin and admin.id != current_user.id %}
                             <div class="d-flex gap-1">
                                 <!-- Toggle Active Status -->
                                 <form method="POST" action="{{ url_for('admin.toggle_admin_status', admin_id=admin.id) }}" class="d-inline">

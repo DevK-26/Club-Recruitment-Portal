@@ -28,7 +28,7 @@ def super_admin_required(f):
             return redirect(url_for('auth.login'))
         if current_user.role != 'admin':
             abort(403)
-        if not current_user.is_super_admin:
+        if not current_user.check_is_super_admin:
             flash('Only the super admin can access this feature.', 'danger')
             return redirect(url_for('admin.dashboard'))
         return f(*args, **kwargs)
