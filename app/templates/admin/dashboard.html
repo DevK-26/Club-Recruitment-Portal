@@ -1023,43 +1023,46 @@
     {% if candidates_without_slots > 0 or upcoming_interviews_count > 0 or never_logged_in > 0 %}
     <div class="alerts-section animate-in delay-1">
         {% if candidates_without_slots > 0 %}
-        <div class="alert-card warning">
-            <div class="alert-icon">
+        <div class="alert-card warning shadow-sm hover-lift">
+            <div class="alert-icon flex-shrink-0">
                 <i class="fas fa-exclamation-triangle"></i>
             </div>
-            <div class="alert-content">
-                <h6>Pending Slot Selection</h6>
-                <p>{{ candidates_without_slots }} candidate(s) haven't selected their interview slot yet</p>
+            <div class="alert-content flex-grow-1 px-3">
+                <h6 class="mb-1">Pending Slot Selection</h6>
+                <p class="mb-0 text-muted small">{{ candidates_without_slots }} candidate(s) haven't selected their interview slot yet</p>
             </div>
-            <div class="alert-action">
-                <a href="{{ url_for('admin.candidates') }}" class="btn-alert">View All</a>
+            <div class="alert-action flex-shrink-0">
+                <a href="{{ url_for('admin.candidates') }}" class="btn-alert text-nowrap">View All</a>
             </div>
         </div>
         {% endif %}
         
         {% if upcoming_interviews_count > 0 %}
-        <div class="alert-card info">
-            <div class="alert-icon">
+        <div class="alert-card info shadow-sm hover-lift">
+            <div class="alert-icon flex-shrink-0">
                 <i class="fas fa-calendar-day"></i>
             </div>
-            <div class="alert-content">
-                <h6>Today's Schedule</h6>
-                <p>{{ upcoming_interviews_count }} interview(s) scheduled for today</p>
+            <div class="alert-content flex-grow-1 px-3">
+                <h6 class="mb-1">Today's Schedule</h6>
+                <p class="mb-0 text-muted small">{{ upcoming_interviews_count }} interview(s) scheduled for today</p>
             </div>
-            <div class="alert-action">
-                <a href="{{ url_for('admin.manage_bookings') }}" class="btn-alert">View Schedule</a>
+            <div class="alert-action flex-shrink-0">
+                <a href="{{ url_for('admin.manage_bookings') }}" class="btn-alert text-nowrap">View Schedule</a>
             </div>
         </div>
         {% endif %}
 
         {% if never_logged_in > 0 %}
-        <div class="alert-card danger">
-            <div class="alert-icon">
+        <div class="alert-card danger shadow-sm hover-lift">
+            <div class="alert-icon flex-shrink-0">
                 <i class="fas fa-user-clock"></i>
             </div>
-            <div class="alert-content">
-                <h6>Inactive Candidates</h6>
-                <p>{{ never_logged_in }} candidate(s) haven't logged in yet</p>
+            <div class="alert-content flex-grow-1 px-3">
+                <h6 class="mb-1">Inactive Candidates</h6>
+                <p class="mb-0 text-muted small">{{ never_logged_in }} candidate(s) haven't logged in yet</p>
+            </div>
+            <div class="alert-action flex-shrink-0">
+                <a href="{{ url_for('admin.candidates') }}" class="btn-alert text-nowrap">View All</a>
             </div>
         </div>
         {% endif %}
@@ -1389,19 +1392,23 @@
             </table>
         </div>
         {% if upcoming_slots|length > 8 %}
-        <div class="text-center py-3 border-top">
+        <div class="text-center py-4 border-top">
             <a href="{{ url_for('admin.manage_slots') }}" class="btn-view">
-                View all {{ upcoming_slots|length }} slots <i class="fas fa-arrow-right ms-2"></i>
+                <span>View all {{ upcoming_slots|length }} slots</span>
+                <i class="fas fa-arrow-right ms-2"></i>
             </a>
         </div>
         {% endif %}
         {% else %}
-        <div class="empty-state">
-            <i class="fas fa-calendar-plus"></i>
-            <h5>No Upcoming Slots</h5>
-            <p>Create interview slots for candidates to book</p>
-            <a href="{{ url_for('admin.manage_slots') }}" class="btn-primary-gradient">
-                <i class="fas fa-plus me-2"></i>Create Slots
+        <div class="empty-state py-5">
+            <div class="empty-icon-wrapper mb-3">
+                <i class="fas fa-calendar-plus fa-3x text-warning opacity-50"></i>
+            </div>
+            <h5 class="fw-bold text-dark">No Upcoming Slots</h5>
+            <p class="text-muted mb-4">Create interview slots for candidates to book</p>
+            <a href="{{ url_for('admin.manage_slots') }}" class="btn btn-primary d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill shadow-sm hover-lift">
+                <i class="fas fa-plus fa-sm"></i>
+                <span>Create Slots</span>
             </a>
         </div>
         {% endif %}

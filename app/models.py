@@ -82,6 +82,7 @@ class InterviewSlot(db.Model):
     current_bookings = db.Column(db.Integer, default=0)
     is_open = db.Column(db.Boolean, default=True)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'))
+    version = db.Column(db.Integer, default=0, nullable=False)  # Optimistic locking
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships

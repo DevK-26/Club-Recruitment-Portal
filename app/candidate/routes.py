@@ -85,7 +85,7 @@ def view_slots():
 @login_required
 @candidate_required
 def book_slot(slot_id):
-    """Book an interview slot with race condition handling"""
+    """Book an interview slot with optimistic locking for race condition handling"""
     # Check if candidate already has a slot
     existing_booking = SlotBooking.query.filter_by(user_id=current_user.id).first()
     
@@ -101,9 +101,13 @@ def book_slot(slot_id):
             flash('Slot not found', 'danger')
             return redirect(url_for('candidate.view_slots'))
         
-        # Check if slot is available
-        if not slot.is_available:
-            flash('This slot is no longer available', 'warning')
+        # Double-check availability (prevents race condition)
+        if not slot.is_open:
+            flash('This slot is no longer open for booking.', 'warning')
+            return redirect(url_for('candidate.view_slots'))
+        
+        if slot.current_bookings >= slot.capacity:
+            flash('Sorry, this slot was just booked by someone else. Please select a different slot.', 'warning')
             return redirect(url_for('candidate.view_slots'))
         
         # Check if slot is in the past
@@ -123,8 +127,9 @@ def book_slot(slot_id):
         
         db.session.add(booking)
         
-        # Increment slot booking counter
+        # Increment slot booking counter and version (optimistic locking)
         slot.current_bookings += 1
+        slot.version += 1
         
         # Update application status
         if current_user.application:

@@ -131,7 +131,7 @@
     <div class="card-body">
         <div class="row">
             {% for slot in available_slots[:6] %}
-            <div class="col-md-4 mb-3">
+            <div class="col-md-4 mb-3" data-slot-id="{{ slot.id }}">
                 <div class="slot-card">
                     <div class="slot-date">
                         <i class="bi bi-calendar-event"></i> {{ slot.date.strftime('%b %d, %Y') }}
@@ -157,4 +157,122 @@
     </div>
 </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<style>
+.slot-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideIn 0.3s ease-out;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    max-width: 400px;
+}
+.slot-toast.success { background: linear-gradient(135deg, #16a34a, #15803d); }
+.slot-toast.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.slot-toast.error { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+.slot-toast.info { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+.btn-loading {
+    position: relative;
+    pointer-events: none;
+    color: transparent !important;
+}
+.btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    top: 50%;
+    left: 50%;
+    margin: -7px 0 0 -7px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<script>
+let bookingInProgress = false;
+
+function showToast(message, type = 'info', duration = 4000) {
+    const toast = document.createElement('div');
+    toast.className = `slot-toast ${type}`;
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideIn 0.3s ease-out reverse';
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) return meta.getAttribute('content');
+    const input = document.querySelector('input[name="csrf_token"]');
+    return input ? input.value : '';
+}
+
+async function bookSlot(slotId, button) {
+    if (bookingInProgress) return;
+    
+    if (!confirm('Confirm booking for this slot?')) return;
+    
+    bookingInProgress = true;
+    document.querySelectorAll('button[data-book-slot]').forEach(btn => btn.disabled = true);
+    button.classList.add('btn-loading');
+    
+    try {
+        const response = await fetch(`/api/slots/${slotId}/book`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast('Interview slot booked successfully! Refreshing...', 'success');
+            setTimeout(() => window.location.reload(), 1500);
+        } else {
+            showToast(data.message || 'Booking failed', 'error');
+            bookingInProgress = false;
+            document.querySelectorAll('button[data-book-slot]').forEach(btn => btn.disabled = false);
+        }
+    } catch (error) {
+        console.error('Booking error:', error);
+        showToast('Network error. Please try again.', 'error');
+        bookingInProgress = false;
+        document.querySelectorAll('button[data-book-slot]').forEach(btn => btn.disabled = false);
+    }
+    button.classList.remove('btn-loading');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form[action*="book-slot"]').forEach(form => {
+        const slotId = form.action.match(/book-slot\/(\d+)/)?.[1];
+        if (slotId) {
+            const button = form.querySelector('button[type="submit"]');
+            if (button) {
+                button.type = 'button';
+                button.setAttribute('data-book-slot', slotId);
+                button.onclick = () => bookSlot(slotId, button);
+            }
+        }
+    });
+});
+</script>
 {% endblock %}
