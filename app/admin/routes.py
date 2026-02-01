@@ -143,6 +143,28 @@ def dashboard():
         # Login statistics - candidates who never logged in (first_login still True)
         never_logged_in = User.query.filter_by(role='candidate', first_login=True).count()
     
+        # Pending reviews (applications with 'pending' status)
+        pending_reviews = Application.query.filter_by(status='pending').count()
+        
+        # Growth statistics
+        candidates_last_week = User.query.filter(
+            User.role == 'candidate',
+            User.created_at < week_ago
+        ).count()
+        
+        candidate_growth = 0
+        if candidates_last_week > 0:
+            candidate_growth = int(((total_candidates - candidates_last_week) / candidates_last_week) * 100)
+        else:
+            candidate_growth = 100 if total_candidates > 0 else 0
+            
+        growth_stats = {
+            'candidates': candidate_growth
+        }
+
+        # For the template compatibility
+        slots_filled = confirmed_bookings
+
         return render_template('admin/dashboard.html',
                              now=now,
                              today=today,
@@ -164,7 +186,10 @@ def dashboard():
                              todays_interviews=todays_interviews,
                              upcoming_interviews_count=upcoming_interviews_count,
                              candidates_without_slots=candidates_without_slots,
-                             never_logged_in=never_logged_in)
+                             never_logged_in=never_logged_in,
+                             slots_filled=slots_filled,
+                             pending_reviews=pending_reviews,
+                             growth_stats=growth_stats)
     except Exception as e:
         import traceback
         logger.error(f"Dashboard error: {str(e)}")
