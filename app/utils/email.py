@@ -124,7 +124,8 @@ def send_credentials_email(user, temp_password):
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     login_url = f"{base_url}/auth/login"
     
-    subject = f"Welcome to {club_name} Recruitment Portal"
+    # Personal subject with name - critical for Primary inbox
+    subject = f"{user.name}, your login credentials for {club_name}"
     
     html = f"""
     <!DOCTYPE html>
@@ -234,7 +235,8 @@ def send_admin_credentials_email(user, temp_password):
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     login_url = f"{base_url}/auth/login"
     
-    subject = f"Admin Account Created - {club_name}"
+    # Personal subject with name - critical for Primary inbox
+    subject = f"{user.name}, your admin access for {club_name}"
     
     html = f"""
     <!DOCTYPE html>
@@ -340,12 +342,13 @@ def send_slot_confirmation_email(user, slot):
     club_name = current_app.config.get('CLUB_NAME', 'Tech Club')
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     
-    subject = f"Interview Slot Confirmed - {club_name}"
-    
     # Format date properly
     from datetime import datetime
     slot_datetime = datetime.combine(slot.date, slot.start_time)
     slot_time = slot_datetime.strftime('%B %d, %Y at %I:%M %p')
+    
+    # Personal subject with name and date - critical for Primary inbox
+    subject = f"{user.name}, your interview is confirmed for {slot.date.strftime('%b %d')}"
     
     # Calculate duration if not a model property
     duration = None
@@ -456,7 +459,8 @@ def send_password_reset_email(user, reset_token):
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     reset_url = f"{base_url}/auth/reset-password/{reset_token}"
     
-    subject = f"Password Reset Request - {club_name}"
+    # Personal subject with name - critical for Primary inbox
+    subject = f"{user.name}, reset your password for {club_name}"
     
     html = f"""
     <!DOCTYPE html>
@@ -546,13 +550,13 @@ def send_announcement_email(candidates, title, content):
     club_name = current_app.config.get('CLUB_NAME', 'Tech Club')
     support_email = current_app.config.get('SUPPORT_EMAIL', 'support@techclub.com')
     
-    # Simple subject without brackets - less likely to be flagged as spam
-    subject = f"{title} - {club_name}"
-    
     success = 0
     failed = 0
     
     for candidate in candidates:
+        # Personal subject with name - critical for Primary inbox
+        subject = f"{candidate.name}, update from {club_name}: {title}"
+        
         html = f"""
         <!DOCTYPE html>
         <html>
