@@ -50,7 +50,7 @@ def is_email_configured():
     return bool(api_key and secret_key and from_email)
 
 
-def send_email(to_email, subject, html_content, reply_to=None):
+def send_email(to_email, subject, html_content):
     """Send email using Mailjet API
     
     Returns:
@@ -65,7 +65,6 @@ def send_email(to_email, subject, html_content, reply_to=None):
         secret_key = current_app.config['MAILJET_SECRET_KEY']
         from_email = current_app.config['MAILJET_FROM_EMAIL']
         from_name = current_app.config.get('CLUB_NAME', 'Tech Club')
-        support_email = current_app.config.get('SUPPORT_EMAIL', from_email)
         
         mailjet = Client(auth=(api_key, secret_key), version='v3.1')
         
@@ -81,24 +80,12 @@ def send_email(to_email, subject, html_content, reply_to=None):
                     },
                     "To": [
                         {
-                            "Email": to_email,
-                            "Name": to_email.split('@')[0]
+                            "Email": to_email
                         }
                     ],
                     "Subject": subject,
                     "TextPart": text_content,
-                    "HTMLPart": html_content,
-                    "ReplyTo": {
-                        "Email": reply_to or support_email,
-                        "Name": from_name
-                    },
-                    "Headers": {
-                        "X-Priority": "1",
-                        "X-MSMail-Priority": "High",
-                        "Importance": "High",
-                        "X-Auto-Response-Suppress": "OOF, AutoReply",
-                        "X-Mailer": "Recruitment Portal"
-                    }
+                    "HTMLPart": html_content
                 }
             ]
         }
