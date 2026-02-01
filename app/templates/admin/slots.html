@@ -14,17 +14,19 @@
 </div>
 
 <!-- Tab Navigation -->
-<ul class="nav nav-tabs mb-4" id="slotTabs" role="tablist">
+<ul class="nav nav-tabs mb-4 px-2" id="slotTabs" role="tablist">
     <li class="nav-item" role="presentation">
         <button class="nav-link active" id="single-tab" data-bs-toggle="tab" data-bs-target="#single" 
                 type="button" role="tab" aria-controls="single" aria-selected="true">
-            <i class="bi bi-plus-circle"></i> Single Slot
+            <i class="bi bi-plus-circle"></i> 
+            <span>Create Single Slot</span>
         </button>
     </li>
     <li class="nav-item" role="presentation">
         <button class="nav-link" id="bulk-tab" data-bs-toggle="tab" data-bs-target="#bulk" 
                 type="button" role="tab" aria-controls="bulk" aria-selected="false">
-            <i class="bi bi-lightning-charge"></i> Bulk Create (Auto-Generate)
+            <i class="bi bi-lightning-charge"></i> 
+            <span>Bulk Generator</span>
         </button>
     </li>
 </ul>
@@ -33,33 +35,33 @@
 <div class="tab-content" id="slotTabContent">
     <!-- Single Slot Creation -->
     <div class="tab-pane fade show active" id="single" role="tabpanel" aria-labelledby="single-tab">
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Create Single Slot</h5>
+        <div class="glass-card rounded-4 overflow-hidden mb-4">
+            <div class="p-4 border-bottom border-light bg-light bg-opacity-50">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle text-primary me-2"></i> Create Single Slot</h5>
             </div>
-            <div class="card-body">
+            <div class="p-4">
                 <form method="POST" action="{{ url_for('admin.create_slot') }}" class="row g-3 align-items-end">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
                     <div class="col-md-3">
-                        <label for="date" class="form-label"><i class="bi bi-calendar3"></i> Date</label>
+                        <label for="date" class="form-label text-muted small text-uppercase">Date</label>
                         <input type="date" class="form-control" id="date" name="date" required min="{{ today }}">
                     </div>
                     <div class="col-md-2">
-                        <label for="start_time" class="form-label"><i class="bi bi-clock"></i> Start Time</label>
+                        <label for="start_time" class="form-label text-muted small text-uppercase">Start Time</label>
                         <input type="time" class="form-control" id="start_time" name="start_time" required>
                     </div>
                     <div class="col-md-2">
-                        <label for="end_time" class="form-label"><i class="bi bi-clock-history"></i> End Time</label>
+                        <label for="end_time" class="form-label text-muted small text-uppercase">End Time</label>
                         <input type="time" class="form-control" id="end_time" name="end_time" required>
                     </div>
                     <div class="col-md-2">
-                        <label for="capacity" class="form-label"><i class="bi bi-people"></i> Capacity</label>
+                        <label for="capacity" class="form-label text-muted small text-uppercase">Capacity</label>
                         <input type="number" class="form-control" id="capacity" name="capacity" 
                                min="1" value="1" required>
                     </div>
                     <div class="col-md-3">
-                        <button type="submit" class="btn btn-success w-100">
+                        <button type="submit" class="btn btn-primary w-100">
                             <i class="bi bi-plus-lg"></i> Create Slot
                         </button>
                     </div>
@@ -70,45 +72,42 @@
 
     <!-- Bulk Slot Creation -->
     <div class="tab-pane fade" id="bulk" role="tabpanel" aria-labelledby="bulk-tab">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-lightning-charge"></i> Automatic Bulk Slot Creation</h5>
-                <small class="text-white-50">Automatically generate multiple slots by dividing time into intervals</small>
+        <div class="glass-card rounded-4 overflow-hidden mb-4">
+            <div class="p-4 border-bottom border-light bg-light bg-opacity-50 d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-lightning-charge text-warning me-2"></i> Bulk Slot Generator</h5>
+                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning">Auto-Generated</span>
             </div>
-            <div class="card-body">
+            <div class="p-4">
                 <form method="POST" action="{{ url_for('admin.create_bulk_slots') }}" id="bulkSlotForm">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-12">
-                            <label class="form-label fw-bold"><i class="bi bi-calendar-range"></i> Select Date(s)</label>
-                            <div class="d-flex gap-2 align-items-center flex-wrap">
-                                <input type="date" class="form-control" id="dateSelector" min="{{ today }}" style="width: auto;">
-                                <button type="button" class="btn btn-outline-primary" onclick="addDate()">
-                                    <i class="bi bi-plus-circle"></i> Add Date
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="addDateRange()">
-                                    <i class="bi bi-calendar-week"></i> Add Week Range
-                                </button>
-                            </div>
-                            <div id="selectedDates" class="mt-2 d-flex flex-wrap gap-2"></div>
-                            <small class="text-muted">Slots will be created for all selected dates</small>
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-dark mb-3"><i class="bi bi-calendar-range me-2 text-primary"></i> Select Date(s)</label>
+                        <div class="d-flex gap-2 align-items-center flex-wrap mb-3">
+                            <input type="date" class="form-control" id="dateSelector" min="{{ today }}" style="width: auto;">
+                            <button type="button" class="btn btn-outline-primary" onclick="addDate()">
+                                <i class="bi bi-plus-circle"></i> Add Date
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="addDateRange()">
+                                <i class="bi bi-calendar-week"></i> Next 7 Days
+                            </button>
                         </div>
+                        <div id="selectedDates" class="d-flex flex-wrap gap-2 p-3 bg-light rounded-3 border border-dashed"></div>
                     </div>
                     
-                    <div class="row g-3 mb-3">
+                    <div class="row g-3 mb-4">
                         <div class="col-md-3">
-                            <label for="bulk_start_time" class="form-label"><i class="bi bi-clock"></i> Start Time</label>
+                            <label for="bulk_start_time" class="form-label text-muted small text-uppercase">Start Time</label>
                             <input type="time" class="form-control" id="bulk_start_time" name="bulk_start_time" 
                                    value="09:00" required>
                         </div>
                         <div class="col-md-3">
-                            <label for="bulk_end_time" class="form-label"><i class="bi bi-clock-history"></i> End Time</label>
+                            <label for="bulk_end_time" class="form-label text-muted small text-uppercase">End Time</label>
                             <input type="time" class="form-control" id="bulk_end_time" name="bulk_end_time" 
                                    value="17:00" required>
                         </div>
                         <div class="col-md-3">
-                            <label for="interval" class="form-label"><i class="bi bi-arrow-left-right"></i> Interval (minutes)</label>
+                            <label for="interval" class="form-label text-muted small text-uppercase">Duration</label>
                             <select class="form-select" id="interval" name="interval" required onchange="updatePreview()">
                                 <option value="15">15 minutes</option>
                                 <option value="20">20 minutes</option>
@@ -120,22 +119,26 @@
                             </select>
                         </div>
                         <div class="col-md-3">
-                            <label for="bulk_capacity" class="form-label"><i class="bi bi-people"></i> Capacity per Slot</label>
+                            <label for="bulk_capacity" class="form-label text-muted small text-uppercase">Capacity / Slot</label>
                             <input type="number" class="form-control" id="bulk_capacity" name="bulk_capacity" 
                                    min="1" value="1" required>
                         </div>
                     </div>
                     
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle"></i> <strong>Preview:</strong> <span id="slotPreview">Configure times to see preview</span>
+                    <div class="alert alert-card info mb-4">
+                        <div class="alert-icon"><i class="bi bi-info-circle"></i></div>
+                        <div class="alert-content">
+                            <h6>Configuration Preview</h6>
+                            <p id="slotPreview">Configure times to see preview</p>
+                        </div>
                     </div>
                     
-                    <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-primary">
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="btn btn-primary px-4">
                             <i class="bi bi-lightning-charge"></i> Generate Slots
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="resetBulkForm()">
-                            <i class="bi bi-arrow-counterclockwise"></i> Reset
+                        <button type="button" class="btn btn-light" onclick="resetBulkForm()">
+                            Reset
                         </button>
                     </div>
                 </form>
@@ -399,7 +402,8 @@ function updatePreview() {
     text += `. Each slot: ${interval} min with capacity of ${capacity}.`;
     
     // Show example slots
-    const examples = [];\n    let currentTime = new Date('2000-01-01T' + startTime);
+    const examples = [];
+    let currentTime = new Date('2000-01-01T' + startTime);
     for (let i = 0; i < Math.min(3, numSlots); i++) {
         const slotEnd = new Date(currentTime.getTime() + interval * 60000);
         examples.push(`${currentTime.toTimeString().slice(0,5)} - ${slotEnd.toTimeString().slice(0,5)}`);
